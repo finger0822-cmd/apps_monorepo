@@ -79,32 +79,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         border: Border.all(color: Colors.white24),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: TextField(
-                        controller: _controller,
-                        readOnly: state.isReadOnly,
-                        maxLines: null,
-                        expands: true,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          height: 1.6,
-                          color: Colors.white,
-                        ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Write one quiet minute.',
-                          hintStyle: TextStyle(
-                            color: Color(0xFF9E9E9E),
-                            fontSize: 22,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          ref
-                              .read(todayEntryControllerProvider.notifier)
-                              .onTextChanged(value);
-                        },
-                      ),
+                      child: state.hasSavedEntry
+                          ? const Center(
+                              child: Text(
+                                '保存できました',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : TextField(
+                              controller: _controller,
+                              readOnly: state.isReadOnly,
+                              maxLines: null,
+                              expands: true,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                height: 1.6,
+                                color: Colors.white,
+                              ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: '1日1分間だけ日記を書きことができます',
+                                hintStyle: TextStyle(
+                                  color: Color(0xFF9E9E9E),
+                                  fontSize: 22,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                ref
+                                    .read(todayEntryControllerProvider.notifier)
+                                    .onTextChanged(value);
+                              },
+                            ),
                     ),
                   ),
+                  if (!state.hasSavedEntry &&
+                      !state.isReadOnly &&
+                      state.text.trim().isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          ref.read(todayEntryControllerProvider.notifier).saveNow();
+                        },
+                        child: const Text('保存する'),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   Align(
                     alignment: Alignment.centerRight,
@@ -124,11 +149,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _timerLabel(TodayEntryState state) {
     if (state.hasSavedEntry) {
-      return 'Saved';
+      return '保存済み';
     }
     if (!state.timerStarted) {
-      return 'Timer starts on first input';
+      return '入力開始でタイマー開始';
     }
-    return '${state.remainingSeconds}s';
+    return '残り ${state.remainingSeconds} 秒';
   }
 }

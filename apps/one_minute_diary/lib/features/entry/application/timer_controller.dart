@@ -35,6 +35,10 @@ class OneMinuteTimerController {
     });
   }
 
+  void stop() {
+    _timer?.cancel();
+  }
+
   void dispose() {
     _timer?.cancel();
   }

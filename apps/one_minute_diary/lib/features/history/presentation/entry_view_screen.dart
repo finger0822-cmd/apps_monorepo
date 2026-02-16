@@ -13,14 +13,14 @@ class EntryViewScreen extends ConsumerWidget {
     final entryAsync = ref.watch(entryByIdProvider(entryId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Entry')),
+      appBar: AppBar(title: const Text('日記')),
       body: entryAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: Colors.white),
         ),
         error: (error, stackTrace) => const Center(
           child: Text(
-            'Failed to load entry.',
+            '日記の読み込みに失敗しました。',
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -28,7 +28,7 @@ class EntryViewScreen extends ConsumerWidget {
           if (entry == null) {
             return const Center(
               child: Text(
-                'Entry not found.',
+                '日記が見つかりません。',
                 style: TextStyle(color: Colors.white),
               ),
             );

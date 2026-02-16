@@ -58,6 +58,19 @@ class TodayEntryController extends StateNotifier<TodayEntryState> {
     }
   }
 
+  Future<void> saveNow() async {
+    if (state.isReadOnly) {
+      return;
+    }
+    if (state.text.trim().isEmpty) {
+      return;
+    }
+
+    _timer.stop();
+    state = state.copyWith(isReadOnly: true);
+    await _saveIfNeeded();
+  }
+
   void _onTick(int remainingSeconds) {
     if (!mounted) {
       return;
