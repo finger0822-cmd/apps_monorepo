@@ -39,3 +39,24 @@ flutter run
 - 元フォルダは `~/Desktop` に残し、`apps/` へコピーで統合
 - 各アプリは独立して実行可能な状態を維持
 - ネストした `.git` は削除し、ルートGitで一元管理
+
+## Support / Privacy Pages
+
+`docs/` 配下にアプリ別のサポートページを配置しています。
+
+- `docs/boundary/`
+- `docs/one-minute-diary/`
+
+共通スタイルは `docs/assets/styles.css` を使用しています。
+
+### GitHub Pages 設定手順
+
+1. GitHub リポジトリの `Settings` → `Pages` を開く
+2. `Deploy from a branch` を選択
+3. `Branch: main` / `Folder: /docs` を選択
+4. `Save` を押す
+
+### 公開URL例
+
+- Boundary: `https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPO/boundary/`
+- 1分日記: `https://YOUR_GITHUB_USERNAME.github.io/YOUR_REPO/one-minute-diary/`

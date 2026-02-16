@@ -3,137 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>1分日記 | サポート</title>
-    <style>
-      :root {
-        color-scheme: light;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        background: #fff;
-        color: #111;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI",
-          "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
-        line-height: 1.7;
-      }
-      main {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 24px 20px 64px;
-      }
-      h1 {
-        margin: 0 0 8px;
-        font-size: 2rem;
-        line-height: 1.3;
-      }
-      h2 {
-        margin: 36px 0 12px;
-        font-size: 1.25rem;
-        line-height: 1.4;
-      }
-      p {
-        margin: 0 0 12px;
-      }
-      .muted {
-        color: #555;
-      }
-      .faq-item {
-        margin-bottom: 14px;
-      }
-      ul {
-        margin: 8px 0 0 1.1rem;
-        padding: 0;
-      }
-      a {
-        color: #222;
-        text-decoration-color: #bdbdbd;
-        text-underline-offset: 2px;
-      }
-      footer {
-        margin-top: 40px;
-        font-size: 0.95rem;
-        color: #555;
-      }
-      @media (min-width: 640px) {
-        main {
-          padding: 40px 28px 72px;
-        }
-      }
-    </style>
+    <title>Support Hub</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
+    <header>
+      <h1>Support Hub</h1>
+      <p class="muted">アプリごとのサポートページとプライバシーポリシーです。</p>
+    </header>
     <main>
-      <header>
-        <h1>1分日記 サポート</h1>
-        <p>1分だけ書ける、静かな日記アプリです。</p>
-      </header>
-
-      <section aria-labelledby="faq">
-        <h2 id="faq">よくある質問（FAQ）</h2>
-        <div class="faq-item">
-          <p><strong>Q.</strong> 1分を過ぎたらどうなりますか？</p>
-          <p><strong>A.</strong> 入力がロックされ、自動保存されます。</p>
-        </div>
-        <div class="faq-item">
-          <p><strong>Q.</strong> 過去の内容は編集できますか？</p>
-          <p>
-            <strong>A.</strong>
-            できません（記録のスナップショットとして残します）。
-          </p>
-        </div>
-        <div class="faq-item">
-          <p><strong>Q.</strong> データはどこに保存されますか？</p>
-          <p><strong>A.</strong> 端末内（ローカル）に保存されます。</p>
-        </div>
-        <div class="faq-item">
-          <p><strong>Q.</strong> 機種変更したらデータは引き継げますか？</p>
-          <p>
-            <strong>A.</strong>
-            MVP時点では引き継ぎ機能は未対応で、今後の対応を検討しています。
-          </p>
-        </div>
-      </section>
-
-      <section aria-labelledby="contact">
-        <h2 id="contact">お問い合わせ</h2>
-        <p>
-          メール:
-          <a href="mailto:suzuki.office4722@gmail.com"
-            >suzuki.office4722@gmail.com</a
-          >
-        </p>
-        <p class="muted">
-          通常3営業日以内の返信を目安にしています。内容により回答までお時間をいただく場合があります。
-        </p>
-      </section>
-
-      <section aria-labelledby="bug-report">
-        <h2 id="bug-report">不具合報告テンプレ</h2>
-        <p class="muted">以下をコピーしてご利用ください。</p>
-        <ul>
-          <li>端末機種 / iOSバージョン / アプリバージョン</li>
-          <li>発生日時</li>
-          <li>再現手順</li>
-          <li>期待する動作</li>
-          <li>実際の動作</li>
-          <li>スクリーンショット（任意）</li>
-        </ul>
-      </section>
-
-      <section aria-labelledby="disclaimer">
-        <h2 id="disclaimer">免責</h2>
-        <p class="muted">
-          本アプリはMVPとして提供しています。継続的な改善に努めますが、すべての環境での完全な動作を保証するものではありません。
-        </p>
-      </section>
-
-      <footer>
-        <a href="./privacy.html">プライバシーポリシー</a>
-      </footer>
+      <h2>アプリ一覧</h2>
+      <ul class="link-list">
+        <li><a href="./boundary/">Boundary</a></li>
+        <li><a href="./one-minute-diary/">1分日記</a></li>
+      </ul>
     </main>
+    <footer>Boundary / One Minute Diary</footer>
   </body>
 </html>
