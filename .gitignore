@@ -1,0 +1,19 @@
+# Flutter/Dart common
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/build/
+
+# iOS/macOS generated
+**/Pods/
+**/.symlinks/
+**/DerivedData/
+
+# IDE
+**/.idea/
+**/.vscode/
+
+# OS
+.DS_Store

@@ -1,0 +1,5 @@
+# snow_blackhole プロジェクト用の設定
+# このファイルを ~/.zshrc に追加するか、source で読み込んでください
+
+# rコマンドでホットリロードを実行
+alias r='cd /Users/user/Desktop/snow_blackhole && ./hot_reload.sh'

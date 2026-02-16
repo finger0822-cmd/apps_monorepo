@@ -1,0 +1,4 @@
+#!/bin/bash
+# 簡単なエイリアス用スクリプト
+cd "$(dirname "$0")"
+./hot_reload.sh
