@@ -1,0 +1,11 @@
+{
+  "folders": [
+    { "path": "../apps/pulse_app", "name": "pulse_app" },
+    { "path": "../apps/boundary_app", "name": "boundary_app" },
+    { "path": "../apps/after_app", "name": "after_app" },
+    { "path": "../packages/core_state", "name": "core_state" },
+    { "path": "../docs", "name": "docs" },
+    { "path": "../tools", "name": "tools" }
+  ],
+  "settings": {}
+}

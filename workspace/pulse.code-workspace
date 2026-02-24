@@ -1,0 +1,8 @@
+{
+  "folders": [
+    { "path": "../apps/pulse_app", "name": "pulse_app" },
+    { "path": "../packages/core_state", "name": "core_state" },
+    { "path": "../docs/pulse", "name": "docs_pulse" }
+  ],
+  "settings": {}
+}

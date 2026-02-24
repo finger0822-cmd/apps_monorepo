@@ -5,11 +5,14 @@
 ## 構成
 
 - `apps/` : 各アプリ本体
-- `packages/` : 将来の共通パッケージ置き場（現在は空）
-- `docs/` : ドキュメント/GitHub Pages用（現在は空）
+- `packages/` : 共通パッケージ（例: core_state。Pulse が依存）
+- `docs/` : ドキュメント・アプリ別仕様（docs/pulse/, docs/boundary/ 等）・GitHub Pages 用
+- `workspace/` : アプリ別・横断用の VSCode/Cursor ワークスペース（.code-workspace）
+- `tools/` : スクリプト等（任意）
 
 ## 取り込み済みアプリ
 
+- `apps/pulse_app`（状態観測。core_state に依存）
 - `apps/after_app`（Flutter構成チェックでは不足あり）
 - `apps/particle_app`
 - `apps/boundary_app`
@@ -17,6 +20,14 @@
 - `apps/snow_blackhole`
 - `apps/one_minute_diary_app`
 - `apps/one_minute_diary`
+
+## ワークスペース（推奨）
+
+アプリごとに集中するため、**workspace ファイルを開いてから作業**することを推奨します。
+
+- **Pulse の日常開発**: `workspace/pulse.code-workspace` を開く（pulse_app + core_state + docs/pulse のみ。他アプリは含めない）
+- **横断作業**（共通化・設計整理）: `workspace/all_apps.code-workspace` を開く。常時起動にはしない
+- **運用ルール詳細**: [docs/OPERATIONS.md](docs/OPERATIONS.md) を参照
 
 ## 起動方法
 
@@ -26,13 +37,15 @@ flutter pub get
 flutter run
 ```
 
-例:
+例（Pulse）:
 
 ```bash
-cd apps/one_minute_diary
+cd apps/pulse_app
 flutter pub get
-flutter run
+flutter run -d <デバイスID>
 ```
+
+**Pulse を触るとき**: 必ず `workspace/pulse.code-workspace` を開いた上で、`apps/pulse_app` をルートに実行すること。別リポジトリを開いたまま実行すると編集と実行の対象がずれる。
 
 ## 運用方針
 
