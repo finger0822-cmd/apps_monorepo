@@ -33,7 +33,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get viewTendencyAnalysisLink => '傾向分析を見る';
 
   @override
-  String get settingsLabel => '設定';
+  String get settingsLabel => 'ご利用にあたって';
 
   @override
   String get disclaimerBody =>
@@ -58,6 +58,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get variabilitySection => '変動';
 
   @override
-  String get tendencyDisclaimer =>
-      '医療・診断・治療のためのものではありません。傾向の参考としてご利用ください。';
+  String get tendencyDisclaimer => '医療・診断・治療のためのものではありません。傾向の参考としてご利用ください。';
 }

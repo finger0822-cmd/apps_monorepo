@@ -1,44 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../core/dev/pulse_test_data_seeder.dart';
 import '../core/pulse_dependencies.dart';
 import '../l10n/app_localizations.dart';
 
-Future<void> _runTestDataSeed(BuildContext context, PulseDependencies deps) async {
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(
-    const SnackBar(content: Text('テストデータ投入中…')),
-  );
-  try {
-    final seeder = PulseTestDataSeeder(deps);
-    final result = await seeder.run(skipExisting: true);
-    if (!context.mounted) return;
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          '投入: ${result.inserted}件, スキップ: ${result.skipped}件, 欠損: ${result.missingDays}日\n'
-          '${result.from != null ? result.from!.toIso8601String().split('T').first : "—"} 〜 '
-          '${result.to != null ? result.to!.toIso8601String().split('T').first : "—"}',
-        ),
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  } catch (e, st) {
-    if (!context.mounted) return;
-    messenger.hideCurrentSnackBar();
-    debugPrint('PulseTestDataSeeder error: $e\n$st');
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('投入に失敗しました: $e'),
-        duration: const Duration(seconds: 5),
-      ),
-    );
-  }
-}
-
-/// Settings: disclaimer, crisis help, 開発用. 振り返りは主機能のためホーム側メニューへ。
+/// ご利用にあたって: disclaimer と相談窓口案内。振り返りは主機能のためホーム側メニューへ。
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.deps});
 
@@ -117,28 +82,6 @@ class SettingsScreen extends StatelessWidget {
                         height: 1.4,
                       ),
                     ),
-                    if (kDebugMode) ...[
-                      const SizedBox(height: 32),
-                      const Divider(color: _mutedColor, height: 1),
-                      const SizedBox(height: 16),
-                      const Text(
-                        '開発用',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _mutedColor,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        onPressed: () => _runTestDataSeed(context, deps),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _mutedColor,
-                          side: const BorderSide(color: _mutedColor),
-                        ),
-                        child: const Text('テストデータ投入（約60日分）'),
-                      ),
-                    ],
                   ],
                 ),
               ),

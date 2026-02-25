@@ -1,13 +1,16 @@
 import 'package:core_state/core_state.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import '../core/aha_prefs.dart';
 import '../core/pulse_dependencies.dart';
+import '../debug/fake_pulse_history.dart';
 import '../domain/insights/header_insight_builder.dart';
 import '../domain/insights/rhythm_detector.dart';
 import '../domain/metrics/pulse_metric.dart';
 import '../l10n/app_localizations.dart';
 import 'widgets/home_overflow_menu.dart';
+import 'widgets/pulse_line_chart.dart';
 import 'widgets/sparkline_wave.dart';
 import 'ai_tendency_screen.dart';
 
@@ -18,11 +21,15 @@ const double spacingSm = 8.0;
 const double spacingMd = 12.0;
 const double spacingLg = 16.0;
 
-// ----- 観測ブロック内
+// ----- 観測ブロック内（高さは一箇所で定義し、ブロック全体を算出）
 const double observationInternalSpacing = 6.0;
 const double observationPeriodLabelToWave = 10.0;
-const double observationChartRowHeight = 40.0;  // 1項目あたりのグラフ高さ
-const double observationChartRowGap = 10.0;     // 項目間の余白
+const double observationChartRowHeight = 40.0;   // グラフ描画エリアの高さ
+const double observationChartRowExtent = 52.0; // 1行あたりの高さ（ラベル＋グラフ）
+const double observationChartRowGap = 10.0;  // 項目間の余白
+const double observationChartsBlockHeaderHeight = 23.0; // 見出し＋余白
+const double observationChartsBlockDateAxisHeight = 22.0; // 一番下の日付横軸
+const double observationChartsBlockHeight = 5 * observationChartRowExtent + 4 * observationChartRowGap + observationChartsBlockHeaderHeight + observationChartsBlockDateAxisHeight; // 323 + 22
 
 // ----- 観測ブロック下 ↔ 「傾向分析を見る」導線の余白（2枚目は観測専用のため入力UIなし）
 const double observationToLinkGap = 32.0;
@@ -31,6 +38,62 @@ const double linkBottomPadding = 32.0;
 // ----- スクロール領域（Padding は上下のみ）
 const double scrollTopPadding = 6.0;
 const double scrollBottomPadding = 24.0;
+
+// ----- 仮データ（本番が空のとき 7/14/30 日切替に耐えるため）
+const int _fakeDays = 120;
+
+List<double> _withFakeIfEmpty(List<double> real, int seed,
+    {double base = 0.55, double trend = 0.0}) {
+  if (real.isNotEmpty) return real;
+  final fake = FakePulseHistory.generate(
+    days: _fakeDays,
+    seed: seed,
+    base: base,
+    trend: trend,
+    noise: 0.08,
+    spikes: 10,
+  );
+  // グラフは 1〜5 スケールなので 0〜1 を変換
+  return fake.map((v) => v * 4 + 1).toList();
+}
+
+List<double> _tail(List<double> xs, int n) {
+  if (xs.length <= n) return xs;
+  return xs.sublist(xs.length - n);
+}
+
+/// 眠気グラフ用：表示する横軸ラベルのインデックスを最低2点（できれば3点）に固定。
+/// 7日: [0, 3, 6]、14日: [0, 7, 13]、30日: [0, 14, 29]。今日（最後）は必須。
+Set<int> _chartAxisVisibleIndices(int periodDays, int total) {
+  if (total <= 1) return {};
+  final last = total - 1;
+  if (periodDays <= 7) {
+    if (total <= 3) return {0, last};
+    return {0, total ~/ 2, last};
+  }
+  if (periodDays <= 14) {
+    if (total <= 7) return {0, last};
+    return {0, 7, last};
+  }
+  if (total <= 14) return {0, last};
+  return {0, 14, last};
+}
+
+/// 横軸ラベル用：「N日前」「今日」。visibleIndices が null のときは全インデックス表示（fl_chart の tick に合わせる）。
+Widget _chartAxisDayLabel(int index, int total, Set<int>? visibleIndices) {
+  if (index < 0 || index >= total) return const SizedBox();
+  if (total == 30 && index == total - 2) return const SizedBox();
+  if (visibleIndices != null && !visibleIndices.contains(index)) return const SizedBox();
+  final daysAgo = total - index;
+  final text = daysAgo == 1 ? '今日' : '$daysAgo日前';
+  return Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 10, color: Color(0x88FFFFFF)),
+    ),
+  );
+}
 
 /// 期間ラベル文言（例: この1週間（2/17–2/23））。
 String _formatPeriodLabel(List<DailyStateEntry> entries, int periodDays) {
@@ -45,7 +108,19 @@ String _formatPeriodLabel(List<DailyStateEntry> entries, int periodDays) {
   return 'この30日（$from–$to）';
 }
 
-/// 観測ブロック。解釈・補助・期間切替・期間ラベル・グラフを重ねず縦積み（Column のみ）。
+/// データ件数・分散に応じた補助文。必要なときだけ返す。
+String? _chartRowHint(List<double> values) {
+  if (values.isEmpty || values.length > 6) return null;
+  if (values.length >= 2 && values.length <= 3) return '記録が少ないため参考表示';
+  if (values.length >= 4) {
+    final min = values.reduce((a, b) => a < b ? a : b);
+    final max = values.reduce((a, b) => a > b ? a : b);
+    if (max - min < 0.2) return '変化が小さい／参考表示';
+  }
+  return null;
+}
+
+/// 観測ブロック。解釈・補助・期間切替・期間ラベル・（任意で）グラフを縦積み。
 class WaveObservationBlock extends StatelessWidget {
   const WaveObservationBlock({
     super.key,
@@ -53,12 +128,14 @@ class WaveObservationBlock extends StatelessWidget {
     this.rhythmResult,
     required this.periodDays,
     required this.onPeriodChanged,
+    this.showCharts = true,
   });
 
   final List<DailyStateEntry> entries;
   final ProvisionalRhythmResult? rhythmResult;
   final int periodDays;
   final ValueChanged<int> onPeriodChanged;
+  final bool showCharts;
 
   static const _labelColor = Color(0xFFC2C2C2);
   static const _mutedColor = Color(0xFF777777);
@@ -66,36 +143,67 @@ class WaveObservationBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sorted = entries.isEmpty ? <DailyStateEntry>[] : entries.toList()..sort((a, b) => a.date.compareTo(b.date));
+    final energyScores = sorted.map((e) => e.energy.value.toDouble()).toList(growable: false);
+    final focusScores = sorted.map((e) => e.focus.value.toDouble()).toList(growable: false);
+    final fatigueScores = sorted.map((e) => e.fatigue.value.toDouble()).toList(growable: false);
+    final moodScores = sorted
+        .where((e) => e.mood != null)
+        .map((e) => e.mood!.toDouble())
+        .toList(growable: false);
+    final sleepScores = sorted
+        .where((e) => e.sleepiness != null)
+        .map((e) => e.sleepiness!.toDouble())
+        .toList(growable: false);
+
     final rawScores = sorted.map((e) => waveScoreFor(e)).toList();
-    final insight = entries.isEmpty ? null : buildHeaderInsight(rawScores);
+    final insight = entries.isEmpty ? null : buildHeaderInsight(rawScores, periodDays: periodDays);
     final showInsight = insight != null && insight.message.isNotEmpty;
     final rhythmLabel = rhythmResult != null
-        ? '今日のリズム：${rhythmResult!.estimatedCycleDays}日'
+        ? '今日のリズム：約${rhythmResult!.estimatedCycleDays}日周期'
         : '今日のリズム：ゆるやか';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. 解釈文（最大2行・overflow対策）
+        // 1. 解釈文（主文1行＋補足は小さく・最大2行）
         if (showInsight)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              insight!.message,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 15,
-                color: _labelColor.withOpacity(0.95),
-                fontWeight: FontWeight.w400,
-                height: 1.35,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  insight.message,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: _labelColor.withOpacity(0.95),
+                    fontWeight: FontWeight.w400,
+                    height: 1.35,
+                  ),
+                ),
+                if (insight.supplement != null && insight.supplement!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    insight.supplement!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: _mutedColor,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         if (showInsight) const SizedBox(height: observationInternalSpacing),
-        // 2. 補助文（1行）
+        // 2. 補助文（1行）＋役割の目安
         Text(
           rhythmLabel,
           textAlign: TextAlign.center,
@@ -104,6 +212,18 @@ class WaveObservationBlock extends StatelessWidget {
           style: const TextStyle(
             fontSize: 14,
             color: _labelColor,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '直近の周期感の目安',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 11,
+            color: _mutedColor,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -126,25 +246,77 @@ class WaveObservationBlock extends StatelessWidget {
             fontWeight: FontWeight.w400,
           ),
         ),
+        if (showCharts) ...[
         const SizedBox(height: observationPeriodLabelToWave),
-        // 5. 5項目のグラフ（縦並び・small multiples）。最小高さで描画崩れを防止。
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: 5 * observationChartRowHeight + 4 * observationChartRowGap,
+        // 5. 5項目のグラフ（縦並び）。showCharts が false のときはここは出さない。
+        if (entries.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'データがありません',
+                style: TextStyle(fontSize: 13, color: Color(0xFF777777), fontWeight: FontWeight.w400),
+              ),
+            ),
+          )
+        else ...[
+          Center(
+            child: Text(
+              '気力・集中・疲れ・気分・眠気',
+              style: TextStyle(
+                fontSize: 11,
+                color: _mutedColor.withOpacity(0.8),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           ),
-          child: entries.isNotEmpty
-              ? _ObservationChartsBlock(entries: entries)
-              : const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'データがありません',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF777777), fontWeight: FontWeight.w400),
-                    ),
-                  ),
-                ),
-        ),
+          const SizedBox(height: 10),
+          PulseLineChart(title: '気力', values: energyScores, lineColor: _labelColor),
+          const SizedBox(height: 16),
+          PulseLineChart(title: '集中', values: focusScores, lineColor: _labelColor),
+          const SizedBox(height: 16),
+          PulseLineChart(title: '疲れ', values: fatigueScores, lineColor: _labelColor),
+          const SizedBox(height: 16),
+          PulseLineChart(title: '気分', values: moodScores, lineColor: _labelColor),
+          const SizedBox(height: 16),
+          PulseLineChart(title: '眠気', values: sleepScores, lineColor: _labelColor),
+          const SizedBox(height: 8),
+          _WaveBlockDateAxis(dates: sorted.map((e) => e.date).toList()),
+        ],
+        ],
       ],
+    );
+  }
+}
+
+/// グラフの一番下に表示する日付の横軸（WaveObservationBlock 用）
+class _WaveBlockDateAxis extends StatelessWidget {
+  const _WaveBlockDateAxis({required this.dates});
+
+  final List<DateTime> dates;
+
+  @override
+  Widget build(BuildContext context) {
+    if (dates.isEmpty) return const SizedBox.shrink();
+    final n = dates.length;
+    final indices = n <= 1 ? <int>[0] : (n <= 3 ? List<int>.generate(n, (i) => i) : <int>[0, n ~/ 2, n - 1]);
+    final labels = indices.map((i) {
+      final d = dates[i];
+      return '${d.month}/${d.day}';
+    }).toList();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: labels.map((text) => Text(
+          text,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Color(0x88FFFFFF),
+            fontWeight: FontWeight.w400,
+          ),
+        )).toList(),
+      ),
     );
   }
 }
@@ -269,59 +441,201 @@ class _NextScreenState extends State<NextScreen> {
         ),
         body: SafeArea(
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: scrollTopPadding,
-                  bottom: linkBottomPadding,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    WaveObservationBlock(
-                      entries: _entriesForPeriod,
-                      rhythmResult: _entriesForPeriod.length >= 7
-                          ? detectProvisionalRhythm(_entriesForPeriod)
-                          : _rhythmResult,
-                      periodDays: _periodDays,
-                      onPeriodChanged: (v) => setState(() => _periodDays = v),
-                    ),
-                    const SizedBox(height: observationToLinkGap),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => AiTendencyScreen(deps: widget.deps),
-                            ),
-                          );
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            l10n.viewTendencyAnalysisLink,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF777777),
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 24, right: 24, top: 6),
+                child: WaveObservationBlock(
+                  entries: _entriesForPeriod,
+                  rhythmResult: _entriesForPeriod.length >= 7
+                      ? detectProvisionalRhythm(_entriesForPeriod)
+                      : _rhythmResult,
+                  periodDays: _periodDays,
+                  onPeriodChanged: (v) => setState(() => _periodDays = v),
+                  showCharts: false,
                 ),
               ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _buildFiveChartsColumn(),
+                ),
+              ),
+              _BottomNextButton(
+                label: l10n.viewTendencyAnalysisLink,
+                onPressed: _goToThirdScreen,
+              ),
+            ],
+          ),
+        ),
+    );
+  }
+
+  void _goToThirdScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AiTendencyScreen(deps: widget.deps),
+      ),
+    );
+  }
+
+  Widget _buildFiveChartsColumn() {
+    final periodEntries = _entriesForPeriod;
+    final sorted = periodEntries.isEmpty
+        ? <DailyStateEntry>[]
+        : periodEntries.toList()..sort((a, b) => a.date.compareTo(b.date));
+    final energyReal = sorted.map((e) => e.energy.value.toDouble()).toList();
+    final focusReal = sorted.map((e) => e.focus.value.toDouble()).toList();
+    final fatigueReal = sorted.map((e) => e.fatigue.value.toDouble()).toList();
+    final moodReal = sorted
+        .where((e) => e.mood != null)
+        .map((e) => e.mood!.toDouble())
+        .toList();
+    final sleepReal = sorted
+        .where((e) => e.sleepiness != null)
+        .map((e) => e.sleepiness!.toDouble())
+        .toList();
+
+    final energyFull = _withFakeIfEmpty(energyReal, 101, base: 0.60, trend: 0.06);
+    final focusFull = _withFakeIfEmpty(focusReal, 202, base: 0.58, trend: 0.03);
+    final fatigueFull = _withFakeIfEmpty(fatigueReal, 303, base: 0.48, trend: -0.02);
+    final moodFull = _withFakeIfEmpty(moodReal, 404, base: 0.56, trend: 0.01);
+    final sleepFull = _withFakeIfEmpty(sleepReal, 505, base: 0.52, trend: 0.00);
+
+    final n = _periodDays;
+    final energyScores = _tail(energyFull, n);
+    final focusScores = _tail(focusFull, n);
+    final fatigueScores = _tail(fatigueFull, n);
+    final moodScores = _tail(moodFull, n);
+    final sleepScores = _tail(sleepFull, n);
+
+    return Column(
+      children: [
+        Expanded(
+          child: _MiniMetricChartRow(
+            title: '気力',
+            values: energyScores,
+            showXAxis: false,
+          ),
+        ),
+        Expanded(
+          child: _MiniMetricChartRow(
+            title: '集中',
+            values: focusScores,
+            showXAxis: false,
+          ),
+        ),
+        Expanded(
+          child: _MiniMetricChartRow(
+            title: '疲れ',
+            values: fatigueScores,
+            showXAxis: false,
+          ),
+        ),
+        Expanded(
+          child: _MiniMetricChartRow(
+            title: '気分',
+            values: moodScores,
+            showXAxis: false,
+          ),
+        ),
+        Expanded(
+          child: _MiniMetricChartRow(
+            title: '眠気',
+            values: sleepScores,
+            showXAxis: false,
+          ),
+        ),
+        SizedBox(
+          height: 32,
+          width: double.infinity,
+          child: _BottomAxisLabelsRow(
+            periodDays: _periodDays,
+            total: energyScores.length,
+            dates: sorted.map((e) => e.date).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 2画面目：5本グラフの直下に表示する横軸ラベル。選択期間（7/14/30日）に合わせて日付（M/d）で表示。
+class _BottomAxisLabelsRow extends StatelessWidget {
+  const _BottomAxisLabelsRow({
+    required this.periodDays,
+    required this.total,
+    required this.dates,
+  });
+
+  final int periodDays;
+  final int total;
+  final List<DateTime> dates;
+
+  static const _axisColor = Color(0xAAFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    if (total <= 1) return const SizedBox.shrink();
+    // 選択期間に合わせて左・中央・右のインデックス
+    final indices = periodDays <= 7
+        ? [0, total ~/ 2, total - 1]
+        : periodDays <= 14
+            ? [0, total ~/ 2, total - 1]
+            : [0, total ~/ 2, total - 1];
+    // 日付があれば M/d で表示（期間表示と一致）、なければ N日前/今日
+    final hasDates = dates.length >= total;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: indices.map((i) {
+          final String text = (hasDates && i < dates.length)
+              ? '${dates[i].month}/${dates[i].day}'
+              : (total - i == 1 ? '今日' : '${total - i}日前');
+          return Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11,
+              color: _axisColor,
+              fontWeight: FontWeight.w400,
             ),
-          ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// 2画面目下部に常に表示する「傾向分析を見る」ボタン（下固定）。
+class _BottomNextButton extends StatelessWidget {
+  const _BottomNextButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2A2A2A),
+              foregroundColor: const Color(0xFFC2C2C2),
+              elevation: 0,
+            ),
+            child: Text(label),
+          ),
         ),
       ),
     );
@@ -371,6 +685,157 @@ class _PeriodChips extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 5行表示用の1行。タイトル + 波形（または「データがありません」）。高さは Expanded で均等割り。
+class _MiniMetricChartRow extends StatelessWidget {
+  const _MiniMetricChartRow({
+    required this.title,
+    required this.values,
+    this.showXAxis = false,
+    this.periodDays,
+  });
+
+  final String title;
+  final List<double> values;
+  final bool showXAxis;
+  final int? periodDays;
+
+  static const _lineColor = Color(0xFFC2C2C2);
+  static const _labelColor = Color(0xFFC2C2C2);
+  static const _mutedColor = Color(0xFF777777);
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = const TextStyle(
+      fontSize: 13,
+      color: _labelColor,
+      fontWeight: FontWeight.w400,
+    );
+    final subStyle = const TextStyle(
+      fontSize: 11,
+      color: _mutedColor,
+      fontWeight: FontWeight.w400,
+    );
+    final hintText = _chartRowHint(values);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(title, style: titleStyle),
+              if (hintText != null) ...[
+                const SizedBox(width: 6),
+                Text(hintText, style: subStyle),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: values.isEmpty
+                ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('データがありません', style: subStyle),
+                  )
+                : Padding(
+                    padding: EdgeInsets.only(
+                      right: showXAxis ? 10 : 0,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: LineChart(
+                            LineChartData(
+                              minX: 0,
+                              maxX: values.length <= 1 ? 1.0 : (values.length - 1).toDouble(),
+                              minY: 1,
+                              maxY: 5,
+                              gridData: const FlGridData(show: false),
+                              titlesData: const FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                rightTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              lineTouchData: const LineTouchData(enabled: false),
+                              lineBarsData: [
+                                LineChartBarData(
+                                  isCurved: true,
+                                  color: _lineColor,
+                                  barWidth: 2,
+                                  dotData: const FlDotData(show: false),
+                                  belowBarData: BarAreaData(show: false),
+                                  spots: values.length == 1
+                                      ? [FlSpot(0, values[0]), FlSpot(1, values[0])]
+                                      : values
+                                          .asMap()
+                                          .entries
+                                          .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                          .toList(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (showXAxis && values.length >= 2)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: SizedBox(
+                              height: 22,
+                              width: double.infinity,
+                              child: _buildBottomAxisLabels(values.length),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 眠気グラフ用：横軸ラベルを Chart 外で表示（fl_chart の bottomTitles が効かない場合の対策）
+  Widget _buildBottomAxisLabels(int total) {
+    final indices = periodDays != null && periodDays! <= 7
+        ? [0, total ~/ 2, total - 1]
+        : periodDays != null && periodDays! <= 14
+            ? [0, total - 1]
+            : [0, total - 1];
+    if (total <= 1 || indices.isEmpty) return const SizedBox();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: indices.map((i) {
+        final daysAgo = total - i;
+        final text = daysAgo == 1 ? '今日' : '$daysAgo日前';
+        return Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Color(0xAAFFFFFF),
+            fontWeight: FontWeight.w400,
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -536,15 +1001,19 @@ class _ObservationChartsBlock extends StatelessWidget {
       case 'fatigue':
         return sorted.map((e) => e.fatigue.value.toDouble()).toList();
       case 'mood':
+        return sorted
+            .where((e) => e.mood != null)
+            .map((e) => e.mood!.toDouble())
+            .toList();
       case 'sleepiness':
-        return [];
+        return sorted
+            .where((e) => e.sleepiness != null)
+            .map((e) => e.sleepiness!.toDouble())
+            .toList();
       default:
         return [];
     }
   }
-
-  static const _rowExtent = 52.0; // 1行あたり（5行を一覧で見せる）
-  static const _blockHeight = 320.0; // ラベル＋5行＋余白で固定
 
   @override
   Widget build(BuildContext context) {
@@ -552,7 +1021,7 @@ class _ObservationChartsBlock extends StatelessWidget {
     final dates = sorted.map((e) => e.date).toList();
 
     return SizedBox(
-      height: _blockHeight,
+      height: observationChartsBlockHeight,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -570,18 +1039,59 @@ class _ObservationChartsBlock extends StatelessWidget {
           const SizedBox(height: 6),
           for (int i = 0; i < PulseMetric.all.length; i++) ...[
             if (i > 0) const SizedBox(height: observationChartRowGap),
-            SizedBox(
-              height: _rowExtent,
-              child: _ObservationChartRow(
-                metric: PulseMetric.all[i],
-                values: _valuesFor(sorted, PulseMetric.all[i].id),
-                dates: dates,
-                lineColor: _chartColors[i],
-                labelColor: _labelColor,
-                mutedColor: _mutedColor,
+            RepaintBoundary(
+              child: SizedBox(
+                height: observationChartRowExtent,
+                child: _ObservationChartRow(
+                  metric: PulseMetric.all[i],
+                  values: _valuesFor(sorted, PulseMetric.all[i].id),
+                  dates: dates,
+                  lineColor: _chartColors[i],
+                  labelColor: _labelColor,
+                  mutedColor: _mutedColor,
+                ),
               ),
             ),
           ],
+          // 一番下に日付の横軸
+          SizedBox(
+            height: observationChartsBlockDateAxisHeight,
+            child: _buildChartsBlockDateAxis(dates),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 5項目グラフの一番下に表示する日付の横軸（左・中央・右の3点）
+  Widget _buildChartsBlockDateAxis(List<DateTime> dates) {
+    if (dates.isEmpty) return const SizedBox.shrink();
+    final n = dates.length;
+    final indices = n <= 1 ? [0] : (n <= 3 ? List<int>.generate(n, (i) => i) : [0, n ~/ 2, n - 1]);
+    final labels = indices.map((i) {
+      final d = dates[i];
+      return '${d.month}/${d.day}';
+    }).toList();
+    // グラフ行と同じ左余白（ラベル幅48 + 間隔8）
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(width: 48 + 8),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: labels.map((text) => Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0x88FFFFFF),
+                  fontWeight: FontWeight.w400,
+                ),
+              )).toList(),
+            ),
+          ),
         ],
       ),
     );
@@ -623,26 +1133,28 @@ class _ObservationChartRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 80),
-            child: values.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'データがありません',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: mutedColor,
-                        fontWeight: FontWeight.w400,
+          child: ExcludeSemantics(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 80),
+              child: values.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        'データがありません',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: mutedColor,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
+                    )
+                  : _MiniChart(
+                      values: values,
+                      lineColor: lineColor,
+                      dates: dates,
+                      height: observationChartRowHeight,
                     ),
-                  )
-                : _MiniChart(
-                    values: values,
-                    lineColor: lineColor,
-                    dates: dates,
-                    height: observationChartRowHeight,
-                  ),
+            ),
           ),
         ),
       ],
@@ -714,39 +1226,45 @@ class _MiniChart extends StatelessWidget {
     final rightLabel = dates != null && dates!.length > 1
         ? '${dates!.last.month}/${dates!.last.day}'
         : (dates != null && dates!.length == 1 ? '${dates!.first.month}/${dates!.first.day}' : null);
+    // 観測行（height 指定時）は日付ラベルを出さず高さを確定し、オーバーフローを防ぐ
+    final showDateLabels = (leftLabel != null || rightLabel != null) && height == null;
+    final totalHeight = (_effectiveHeight + (showDateLabels ? 8.0 : 0.0)).clamp(0.0, observationChartRowExtent);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(
-              width: 12,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    '5',
-                    style: TextStyle(
-                      color: _rangeColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
+    return SizedBox(
+      height: totalHeight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 12,
+                height: _effectiveHeight,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '5',
+                      style: TextStyle(
+                        color: _rangeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '1',
-                    style: TextStyle(
-                      color: _rangeColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
+                    Text(
+                      '1',
+                      style: TextStyle(
+                        color: _rangeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             const SizedBox(width: 8),
             Expanded(
               child: SizedBox(
@@ -776,7 +1294,7 @@ class _MiniChart extends StatelessWidget {
             ),
           ],
         ),
-        if (leftLabel != null || rightLabel != null) ...[
+        if (showDateLabels) ...[
           const SizedBox(height: 4),
           Row(
             children: [
@@ -801,8 +1319,9 @@ class _MiniChart extends StatelessWidget {
                 ),
             ],
           ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
