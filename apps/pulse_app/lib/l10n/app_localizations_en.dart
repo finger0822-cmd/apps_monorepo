@@ -33,7 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewTendencyAnalysisLink => 'View tendency analysis';
 
   @override
-  String get settingsLabel => 'Settings';
+  String get settingsLabel => 'Before you use';
 
   @override
   String get disclaimerBody =>

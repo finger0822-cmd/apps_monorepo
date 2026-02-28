@@ -134,16 +134,22 @@ abstract class AppLocalizations {
   /// **'振り返り'**
   String get trendLabel;
 
-  /// 傾向分析（3枚目・メニュー用）
+  /// No description provided for @tendencyAnalysisLabel.
+  ///
+  /// In ja, this message translates to:
+  /// **'傾向分析'**
   String get tendencyAnalysisLabel;
 
-  /// 2枚目からの導線「傾向分析を見る」
+  /// No description provided for @viewTendencyAnalysisLink.
+  ///
+  /// In ja, this message translates to:
+  /// **'傾向分析を見る'**
   String get viewTendencyAnalysisLink;
 
   /// No description provided for @settingsLabel.
   ///
   /// In ja, this message translates to:
-  /// **'設定'**
+  /// **'ご利用にあたって'**
   String get settingsLabel;
 
   /// No description provided for @disclaimerBody.
@@ -159,14 +165,39 @@ abstract class AppLocalizations {
   String get crisisHelp;
 
   /// No description provided for @ahaTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'Pulseがあなたの波を見つけ始めました'**
   String get ahaTitle;
 
   /// No description provided for @continueLabel.
+  ///
+  /// In ja, this message translates to:
+  /// **'続ける'**
   String get continueLabel;
 
+  /// No description provided for @aiSummarySection.
+  ///
+  /// In ja, this message translates to:
+  /// **'AI要約'**
   String get aiSummarySection;
+
+  /// No description provided for @perMetricTrendSection.
+  ///
+  /// In ja, this message translates to:
+  /// **'項目別傾向'**
   String get perMetricTrendSection;
+
+  /// No description provided for @variabilitySection.
+  ///
+  /// In ja, this message translates to:
+  /// **'変動'**
   String get variabilitySection;
+
+  /// No description provided for @tendencyDisclaimer.
+  ///
+  /// In ja, this message translates to:
+  /// **'医療・診断・治療のためのものではありません。傾向の参考としてご利用ください。'**
   String get tendencyDisclaimer;
 }
 
