@@ -1,2 +1,4 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
+// Prevent resource fork/provenance on copies (macOS Sequoia+ codesign workaround)
+COPYFILE_DISABLE = 1

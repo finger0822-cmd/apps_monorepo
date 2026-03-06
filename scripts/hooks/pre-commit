@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
+echo "==> arch_check"
+chmod +x "$ROOT_DIR/scripts/arch_check.sh"
+"$ROOT_DIR/scripts/arch_check.sh"
+
+# 変更が pulse_app_v2 にあるときだけ analyze と format チェック（重さ回避）
+if git diff --cached --name-only | grep -q '^apps/pulse_app_v2/'; then
+  echo "==> flutter analyze (apps/pulse_app_v2)"
+  (cd "$ROOT_DIR/apps/pulse_app_v2" && flutter analyze lib/)
+  echo "==> dart format check (apps/pulse_app_v2)"
+  (cd "$ROOT_DIR/apps/pulse_app_v2" && dart format --output=none --set-exit-if-changed .)
+else
+  echo "==> skip flutter analyze / dart format (no changes in apps/pulse_app_v2)"
+fi
+
+echo "OK"

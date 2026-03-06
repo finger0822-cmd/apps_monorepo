@@ -1,0 +1,53 @@
+name: pulse_app_v2_ci
+
+on:
+  pull_request:
+    paths:
+      - "apps/pulse_app_v2/**"
+      - ".github/workflows/pulse_app_v2_ci.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/pulse_app_v2/**"
+      - ".github/workflows/pulse_app_v2_ci.yml"
+
+jobs:
+  analyze-and-arch-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/pulse_app_v2
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: Architecture Guard (arch_check.sh)
+        run: |
+          chmod +x ../../scripts/arch_check.sh
+          ../../scripts/arch_check.sh
+
+      - name: Flutter Analyze
+        run: flutter analyze lib/
+
+      - name: Dart Format Check
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Flutter Test
+        run: |
+          if [ -d "test" ] && find test -name "*_test.dart" | grep -q .; then
+            flutter test
+          else
+            echo "No tests found. Skip."
+          fi

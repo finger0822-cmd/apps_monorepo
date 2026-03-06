@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+  "appTitle": "Pulse",
+  "energy": "Energy",
+  "focus": "Focus",
+  "fatigue": "Fatigue",
+  "nextLabel": "Record",
+  "trendLabel": "Trend",
+  "tendencyAnalysisLabel": "Tendency analysis",
+  "viewTendencyAnalysisLink": "View tendency analysis",
+  "settingsLabel": "Before you use",
+  "disclaimerBody": "Pulse is not for medical diagnosis or treatment. It is a tool to observe your daily state.\nIf you are in distress or crisis, please contact a professional support service.",
+  "crisisHelp": "Crisis support",
+  "ahaTitle": "Pulse is starting to see your wave",
+  "continueLabel": "Continue",
+  "aiSummarySection": "AI summary",
+  "perMetricTrendSection": "Per-metric trends",
+  "variabilitySection": "Variability",
+  "tendencyDisclaimer": "Not for medical diagnosis or treatment. For reference only."
+}

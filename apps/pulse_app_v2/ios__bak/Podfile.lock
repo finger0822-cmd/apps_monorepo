@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - in_app_purchase_storekit (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - isar_flutter_libs (1.0.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
+  - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  in_app_purchase_storekit:
+    :path: ".symlinks/plugins/in_app_purchase_storekit/darwin"
+  isar_flutter_libs:
+    :path: ".symlinks/plugins/isar_flutter_libs/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  in_app_purchase_storekit: 22cca7d08eebca9babdf4d07d0baccb73325d3c8
+  isar_flutter_libs: 9fc2cfb928c539e1b76c481ba5d143d556d94920
+
+PODFILE CHECKSUM: c23f526ccc0e5d3d2374eff3b2b3432ef99c247b
+
+COCOAPODS: 1.16.2

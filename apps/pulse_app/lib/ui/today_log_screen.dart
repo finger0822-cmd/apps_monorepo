@@ -1,12 +1,8 @@
-import 'package:core_state/core_state.dart';
 import 'package:flutter/material.dart';
 
 import '../core/pulse_dependencies.dart';
 import '../domain/metrics/pulse_metric.dart';
 import '../l10n/app_localizations.dart';
-import 'next_screen.dart';
-import 'widgets/home_overflow_menu.dart';
-import 'widgets/metric_explanation_sheet.dart';
 
 /// 1枚目：今日の状態の記録（入力専用）。5項目を共通定義から表示し、項目名長押しで説明を表示する。
 /// スクロールなしで5項目が収まるよう余白・円サイズを調整。
@@ -57,6 +53,24 @@ class _TodayLogScreenState extends State<TodayLogScreen> {
     return _values.length >= 5 && _values.every((v) => v >= min && v <= max);
   }
 
+  static void _showMetricExplanation(BuildContext context, PulseMetric metric) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(metric.descriptionTitle),
+        content: SingleChildScrollView(
+          child: Text(metric.descriptionBody),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _onNextPressed() async {
     if (!_isValid || _saving) return;
 
@@ -70,22 +84,11 @@ class _TodayLogScreenState extends State<TodayLogScreen> {
         focus: _values[1],
         fatigue: _values[2],
       );
-      final entries = await widget.deps.repo.latest(7);
-      final stats = StateStatsService().computeStats(entries);
-      // ignore: avoid_print
-      print('Pulse avgEnergy: ${stats.avgEnergy}');
-
       if (!mounted) return;
-      final nav = Navigator.of(context);
-      await nav.pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => NextScreen(
-            deps: widget.deps,
-            energy: _values[0],
-            focus: _values[1],
-            fatigue: _values[2],
-            date: DateTime.now(),
-          ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('保存しました'),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -113,13 +116,6 @@ class _TodayLogScreenState extends State<TodayLogScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 8, top: 4),
-                  child: HomeOverflowButton(deps: widget.deps),
-                ),
-              ),
               const Spacer(flex: 1),
               Expanded(
                 flex: 8,
@@ -139,8 +135,7 @@ class _TodayLogScreenState extends State<TodayLogScreen> {
                                 metric: PulseMetric.all[i],
                                 value: _values[i],
                                 onChanged: (v) => _onValueChanged(i, v),
-                                onLongPressLabel: () =>
-                                    MetricExplanationSheet.show(context, PulseMetric.all[i]),
+                                onLongPressLabel: () => _showMetricExplanation(context, PulseMetric.all[i]),
                               ),
                             ],
                             const SizedBox(height: 20),

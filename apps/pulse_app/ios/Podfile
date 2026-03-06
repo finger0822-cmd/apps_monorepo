@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +39,16 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+  end
+  # macOS Sequoia+ codesign workaround: strip xattr after each framework copy in Pods embed script
+  frameworks_sh = File.join(installer.sandbox.root, 'Target Support Files', 'Pods-Runner', 'Pods-Runner-frameworks.sh')
+  if File.exist?(frameworks_sh) && !File.read(frameworks_sh).include?('xattr -cr')
+    content = File.read(frameworks_sh)
+    needle = "\n\n  local basename\n  basename="
+    patch = "\n\n  # Strip extended attributes (e.g. com.apple.provenance) so codesign succeeds on macOS Sequoia+\n  xattr -cr \"\${destination}/\$(basename \"\$1\")\" 2>/dev/null || true\n\n  local basename\n  basename="
+    if content.include?(needle)
+      content.sub!(needle, patch)
+      File.write(frameworks_sh, content)
+    end
   end
 end
