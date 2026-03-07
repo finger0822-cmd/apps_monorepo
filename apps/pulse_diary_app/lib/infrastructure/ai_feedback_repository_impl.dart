@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 
 import '../core/secure_storage/api_key_secure_storage.dart';
@@ -28,13 +29,21 @@ class AiFeedbackRepositoryImpl implements AiFeedbackRepository {
       return entry.aiFeedback;
     }
 
-    final apiKey = await _apiKeyStorage.getApiKey();
+    // APIキー取得（シミュレータでは secure storage が動かない場合あり）
+    String? apiKey;
+    try {
+      apiKey = await _apiKeyStorage.getApiKey();
+    } catch (_) {
+      apiKey = null;
+    }
     if (apiKey == null || apiKey.isEmpty) return null;
 
     try {
+      final userContent =
+          '今日の状態:\n  気力: ${entry.energy}/5\n  集中: ${entry.focus}/5\n  疲れ: ${entry.fatigue}/5\n  気分: ${entry.mood}/5\n  眠気: ${entry.sleepiness}/5\n\n今日の日記:\n${entry.text}';
       final feedback = await _apiService.getFeedback(
         apiKey: apiKey,
-        diaryText: entry.text,
+        diaryText: userContent,
         language: language,
       );
 
@@ -43,9 +52,11 @@ class AiFeedbackRepositoryImpl implements AiFeedbackRepository {
       await _isar.writeTxn(() => _isar.diaryEntrys.put(entry));
 
       return feedback;
-    } on ClaudeApiException {
+    } on ClaudeApiException catch (e) {
+      debugPrint('ClaudeApiException: $e');
       rethrow;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('Unknown error: $e\n$st');
       return null;
     }
   }

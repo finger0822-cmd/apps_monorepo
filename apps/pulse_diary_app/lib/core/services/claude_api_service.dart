@@ -25,7 +25,7 @@ class ClaudeApiService {
         : 'Answer in English.';
 
     const systemPrompt =
-        'You give brief, encouraging feedback on diary entries in 1-2 sentences. Keep the response under 150 tokens.';
+        'あなたはユーザーの日々の体調・気分ログと日記を分析するアシスタントです。今日の記録をもとに、共感を込めて2〜3文で要約してください。';
 
     final body = {
       'model': _model,

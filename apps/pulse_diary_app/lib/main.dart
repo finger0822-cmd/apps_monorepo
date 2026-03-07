@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/storage/isar_service.dart';
 import 'core/theme/app_theme.dart';
+import 'features/today_log/presentation/screens/today_log_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,23 +26,7 @@ class PulseDiaryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Pulse Diary',
       theme: AppTheme.light,
-      home: const _PlaceholderHome(),
-    );
-  }
-}
-
-class _PlaceholderHome extends StatelessWidget {
-  const _PlaceholderHome();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pulse Diary'),
-      ),
-      body: const Center(
-        child: Text('Pulse Diary'),
-      ),
+      home: const TodayLogScreen(),
     );
   }
 }

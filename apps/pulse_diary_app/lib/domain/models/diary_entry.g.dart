@@ -32,18 +32,38 @@ const DiaryEntrySchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'moodScore': PropertySchema(
+    r'energy': PropertySchema(
       id: 3,
-      name: r'moodScore',
+      name: r'energy',
+      type: IsarType.long,
+    ),
+    r'fatigue': PropertySchema(
+      id: 4,
+      name: r'fatigue',
+      type: IsarType.long,
+    ),
+    r'focus': PropertySchema(
+      id: 5,
+      name: r'focus',
+      type: IsarType.long,
+    ),
+    r'mood': PropertySchema(
+      id: 6,
+      name: r'mood',
       type: IsarType.long,
     ),
     r'photoPath': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'photoPath',
       type: IsarType.string,
     ),
+    r'sleepiness': PropertySchema(
+      id: 8,
+      name: r'sleepiness',
+      type: IsarType.long,
+    ),
     r'text': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'text',
       type: IsarType.string,
     )
@@ -93,9 +113,13 @@ void _diaryEntrySerialize(
   writer.writeString(offsets[0], object.aiFeedback);
   writer.writeBool(offsets[1], object.aiFeedbackLoaded);
   writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeLong(offsets[3], object.moodScore);
-  writer.writeString(offsets[4], object.photoPath);
-  writer.writeString(offsets[5], object.text);
+  writer.writeLong(offsets[3], object.energy);
+  writer.writeLong(offsets[4], object.fatigue);
+  writer.writeLong(offsets[5], object.focus);
+  writer.writeLong(offsets[6], object.mood);
+  writer.writeString(offsets[7], object.photoPath);
+  writer.writeLong(offsets[8], object.sleepiness);
+  writer.writeString(offsets[9], object.text);
 }
 
 DiaryEntry _diaryEntryDeserialize(
@@ -108,9 +132,13 @@ DiaryEntry _diaryEntryDeserialize(
     aiFeedback: reader.readStringOrNull(offsets[0]),
     aiFeedbackLoaded: reader.readBoolOrNull(offsets[1]) ?? false,
     createdAt: reader.readDateTime(offsets[2]),
-    moodScore: reader.readLong(offsets[3]),
-    photoPath: reader.readStringOrNull(offsets[4]),
-    text: reader.readString(offsets[5]),
+    energy: reader.readLong(offsets[3]),
+    fatigue: reader.readLong(offsets[4]),
+    focus: reader.readLong(offsets[5]),
+    mood: reader.readLong(offsets[6]),
+    photoPath: reader.readStringOrNull(offsets[7]),
+    sleepiness: reader.readLong(offsets[8]),
+    text: reader.readString(offsets[9]),
   );
   object.id = id;
   return object;
@@ -132,8 +160,16 @@ P _diaryEntryDeserializeProp<P>(
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -448,6 +484,166 @@ extension DiaryEntryQueryFilter
     });
   }
 
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> energyEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'energy',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> energyGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'energy',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> energyLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'energy',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> energyBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'energy',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> fatigueEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fatigue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition>
+      fatigueGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fatigue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> fatigueLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fatigue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> fatigueBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fatigue',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> focusEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'focus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> focusGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'focus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> focusLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'focus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> focusBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'focus',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -501,44 +697,43 @@ extension DiaryEntryQueryFilter
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodScoreEqualTo(
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'moodScore',
+        property: r'mood',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition>
-      moodScoreGreaterThan(
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'moodScore',
+        property: r'mood',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodScoreLessThan(
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'moodScore',
+        property: r'mood',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodScoreBetween(
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> moodBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -546,7 +741,7 @@ extension DiaryEntryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'moodScore',
+        property: r'mood',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -703,6 +898,61 @@ extension DiaryEntryQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'photoPath',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> sleepinessEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sleepiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition>
+      sleepinessGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sleepiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition>
+      sleepinessLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sleepiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterFilterCondition> sleepinessBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sleepiness',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -883,15 +1133,51 @@ extension DiaryEntryQuerySortBy
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByMoodScore() {
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByEnergy() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'moodScore', Sort.asc);
+      return query.addSortBy(r'energy', Sort.asc);
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByMoodScoreDesc() {
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByEnergyDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'moodScore', Sort.desc);
+      return query.addSortBy(r'energy', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByFatigue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatigue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByFatigueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatigue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'focus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByFocusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'focus', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByMood() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mood', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByMoodDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'mood', Sort.desc);
     });
   }
 
@@ -904,6 +1190,18 @@ extension DiaryEntryQuerySortBy
   QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortByPhotoPathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoPath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortBySleepiness() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sleepiness', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> sortBySleepinessDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sleepiness', Sort.desc);
     });
   }
 
@@ -959,6 +1257,42 @@ extension DiaryEntryQuerySortThenBy
     });
   }
 
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByEnergy() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'energy', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByEnergyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'energy', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByFatigue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatigue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByFatigueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatigue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'focus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByFocusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'focus', Sort.desc);
+    });
+  }
+
   QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -971,15 +1305,15 @@ extension DiaryEntryQuerySortThenBy
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByMoodScore() {
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByMood() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'moodScore', Sort.asc);
+      return query.addSortBy(r'mood', Sort.asc);
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByMoodScoreDesc() {
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByMoodDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'moodScore', Sort.desc);
+      return query.addSortBy(r'mood', Sort.desc);
     });
   }
 
@@ -992,6 +1326,18 @@ extension DiaryEntryQuerySortThenBy
   QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenByPhotoPathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoPath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenBySleepiness() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sleepiness', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QAfterSortBy> thenBySleepinessDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sleepiness', Sort.desc);
     });
   }
 
@@ -1029,9 +1375,27 @@ extension DiaryEntryQueryWhereDistinct
     });
   }
 
-  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctByMoodScore() {
+  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctByEnergy() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'moodScore');
+      return query.addDistinctBy(r'energy');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctByFatigue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fatigue');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctByFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'focus');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctByMood() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'mood');
     });
   }
 
@@ -1039,6 +1403,12 @@ extension DiaryEntryQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'photoPath', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DiaryEntry, DiaryEntry, QDistinct> distinctBySleepiness() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sleepiness');
     });
   }
 
@@ -1076,15 +1446,39 @@ extension DiaryEntryQueryProperty
     });
   }
 
-  QueryBuilder<DiaryEntry, int, QQueryOperations> moodScoreProperty() {
+  QueryBuilder<DiaryEntry, int, QQueryOperations> energyProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'moodScore');
+      return query.addPropertyName(r'energy');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, int, QQueryOperations> fatigueProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fatigue');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, int, QQueryOperations> focusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'focus');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, int, QQueryOperations> moodProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'mood');
     });
   }
 
   QueryBuilder<DiaryEntry, String?, QQueryOperations> photoPathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'photoPath');
+    });
+  }
+
+  QueryBuilder<DiaryEntry, int, QQueryOperations> sleepinessProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sleepiness');
     });
   }
 
