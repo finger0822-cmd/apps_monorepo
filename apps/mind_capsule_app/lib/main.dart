@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'core/l10n/app_strings.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/providers/app_providers.dart';
 import 'core/services/claude_service.dart';
@@ -11,6 +12,7 @@ import 'core/theme/app_theme.dart';
 import 'features/history/history_screen.dart';
 import 'features/record/record_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/settings/settings_provider.dart';
 import 'features/stats/stats_screen.dart';
 
 Future<void> main() async {
@@ -48,13 +50,13 @@ class MindCapsuleApp extends StatelessWidget {
   }
 }
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
   static const _screens = [
     RecordScreen(),
@@ -62,8 +64,11 @@ class _MainShellState extends State<MainShell> {
     StatsScreen(),
     SettingsScreen(),
   ];
+
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
+    final s = AppStrings.of(lang);
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -71,25 +76,13 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
         indicatorColor: AppTheme.lightPurple,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.edit_note, size: 26),
-            label: '記録',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history, size: 26),
-            label: '履歴',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.show_chart, size: 26),
-            label: 'グラフ',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings, size: 26),
-            label: '設定',
-          ),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.edit_note, size: 26), label: s.tabRecord),
+          NavigationDestination(icon: const Icon(Icons.history, size: 26), label: s.tabHistory),
+          NavigationDestination(icon: const Icon(Icons.show_chart, size: 26), label: s.tabStats),
+          NavigationDestination(icon: const Icon(Icons.settings, size: 26), label: s.tabSettings),
         ],
       ),
     );

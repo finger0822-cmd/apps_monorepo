@@ -52,7 +52,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         .length;
 
     return SubscriptionState(
-      isPremium: false, // TODO: RevenueCat連携後に差し替え
+      isPremium: true, // TODO: RevenueCat連携後に差し替え
       aiUsedThisMonth: aiUsed,
       capsuleCount: 0,
     );

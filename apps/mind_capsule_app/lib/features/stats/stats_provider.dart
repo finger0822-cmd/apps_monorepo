@@ -74,3 +74,53 @@ List<StatsDayData> aggregateByDay(List<MindEntry> entries) {
   result.sort((a, b) => a.date.compareTo(b.date));
   return result;
 }
+
+/// 週ごとに集約（90日用）
+List<StatsDayData> aggregateByWeek(List<MindEntry> entries) {
+  final grouped = <String, List<MindEntry>>{};
+  for (final e in entries) {
+    final d = e.createdAt;
+    final weekStart = d.subtract(Duration(days: d.weekday - 1));
+    final key = '${weekStart.year}-${weekStart.month}-${weekStart.day}';
+    grouped.putIfAbsent(key, () => []).add(e);
+  }
+  final result = grouped.entries.map((g) {
+    final list = g.value;
+    final parts = g.key.split('-');
+    final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    final energy = list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
+    final focus = list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
+    final fatigue = list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
+    final mood = list.map((e) => e.mood).reduce((a, b) => a + b) / list.length;
+    final sleepiness = list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
+    final avg = list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
+    return StatsDayData(date: date, energy: energy, focus: focus,
+        fatigue: fatigue, mood: mood, sleepiness: sleepiness, averageScore: avg);
+  }).toList();
+  result.sort((a, b) => a.date.compareTo(b.date));
+  return result;
+}
+
+/// 月ごとに集約（全期間用）
+List<StatsDayData> aggregateByMonth(List<MindEntry> entries) {
+  final grouped = <String, List<MindEntry>>{};
+  for (final e in entries) {
+    final key = '${e.createdAt.year}-${e.createdAt.month}';
+    grouped.putIfAbsent(key, () => []).add(e);
+  }
+  final result = grouped.entries.map((g) {
+    final list = g.value;
+    final parts = g.key.split('-');
+    final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), 1);
+    final energy = list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
+    final focus = list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
+    final fatigue = list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
+    final mood = list.map((e) => e.mood).reduce((a, b) => a + b) / list.length;
+    final sleepiness = list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
+    final avg = list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
+    return StatsDayData(date: date, energy: energy, focus: focus,
+        fatigue: fatigue, mood: mood, sleepiness: sleepiness, averageScore: avg);
+  }).toList();
+  result.sort((a, b) => a.date.compareTo(b.date));
+  return result;
+}

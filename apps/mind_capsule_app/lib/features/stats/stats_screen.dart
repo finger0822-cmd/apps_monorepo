@@ -2,12 +2,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/services/subscription_service.dart';
 import '../settings/settings_provider.dart';
 import 'stats_provider.dart';
 
-const _metricLabels = ['気力', '集中', '疲れ', '気分', '眠気'];
 const _metricColors = [
   Color(0xFF4CAF50),
   Color(0xFF2196F3),
@@ -34,15 +34,18 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   static const _periods = [7, 30, 90, 0]; // 0 = 全期間
   String? _aiAnalysis;
   bool _aiLoading = false;
+  final _visibleMetrics = [true, true, true, true, true];
 
   @override
   Widget build(BuildContext context) {
     final subAsync = ref.watch(subscriptionProvider);
     final entriesAsync = ref.watch(statsEntriesProvider(_selectedDays));
+    final lang = ref.watch(appLanguageProvider);
+    final s = AppStrings.of(lang);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('グラフ'),
+        title: Text(s.statsTitle),
       ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -54,14 +57,25 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             return Column(
               children: [
                 const SizedBox(height: 16),
-                _buildPeriodSelector(subAsync),
-                const Expanded(child: Center(child: Text('まだデータがありません'))),
+                _buildPeriodSelector(subAsync, s),
+                Expanded(child: Center(child: Text(s.statsNoData))),
               ],
             );
           }
-          final aggregated = aggregateByDay(entries);
+          final aggregated = _selectedDays == 0
+              ? aggregateByMonth(entries)
+              : _selectedDays >= 90
+                  ? aggregateByWeek(entries)
+                  : aggregateByDay(entries);
+
+          final aggregateLabel = _selectedDays == 0
+              ? s.statsMonthAvg
+              : _selectedDays >= 90
+                  ? s.statsWeekAvg
+                  : s.statsDayly;
+
           if (aggregated.isEmpty) {
-            return const Center(child: Text('まだデータがありません'));
+            return Center(child: Text(s.statsNoData));
           }
           final avgScore = entries
                   .map((e) => e.averageScore)
@@ -71,7 +85,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildPeriodSelector(subAsync),
+              _buildPeriodSelector(subAsync, s),
               const SizedBox(height: 16),
               Card(
                 child: Padding(
@@ -80,7 +94,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '全体平均スコア',
+                        s.statsAvgScore,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 4),
@@ -93,7 +107,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                         ),
                       ),
                       Text(
-                        '（気力・集中・気分は高め、疲れ・眠気は低めが良いスコアです）',
+                        s.statsAvgNote,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontSize: 12,
                               color: Colors.grey,
@@ -105,43 +119,68 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                '5軸の推移',
+                s.statsChartLabel(aggregateLabel),
                 style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(5, (i) {
+                    return GestureDetector(
+                      onTap: () => setState(() => _visibleMetrics[i] = !_visibleMetrics[i]),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _visibleMetrics[i]
+                              ? _metricColors[i].withValues(alpha: 0.15)
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _visibleMetrics[i]
+                                ? _metricColors[i]
+                                : Colors.grey.shade300,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: _visibleMetrics[i]
+                                    ? _metricColors[i]
+                                    : Colors.grey.shade300,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              s.axisLabelsShort[i],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: _visibleMetrics[i]
+                                    ? _metricColors[i]
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
               ),
               const SizedBox(height: 8),
               SizedBox(
                 height: 220,
-                child: _StatsLineChart(aggregated: aggregated),
-              ),
-              const SizedBox(height: 16),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(
-                      5,
-                      (i) => Padding(
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: _metricColors[i],
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _metricLabels[i],
-                                  style:
-                                      Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                          )),
+                child: _StatsLineChart(
+                  aggregated: aggregated,
+                  visibleMetrics: _visibleMetrics,
                 ),
               ),
               const SizedBox(height: 24),
@@ -180,10 +219,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                             )
                           : const Text('✨'),
                       label: Text(aiLocked
-                          ? 'AI分析（今月の上限に達しました）'
+                          ? s.statsAiLocked
                           : _aiLoading
-                              ? '分析中...'
-                              : 'この期間をAIで分析'),
+                              ? s.statsAiLoading
+                              : s.statsAiButton),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6A3DE8),
                         foregroundColor: Colors.white,
@@ -217,11 +256,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildPeriodSelector(AsyncValue<SubscriptionState> subAsync) {
+  Widget _buildPeriodSelector(AsyncValue<SubscriptionState> subAsync, AppStrings s) {
     final sub = subAsync.valueOrNull;
     return SegmentedButton<int>(
       segments: _periods.map((d) {
-        final label = d == 0 ? '全期間' : '$d日';
+        final label = d == 0 ? s.statsPeriodAll : '$d日';
         final locked = sub != null && !sub.canUsePeriod(d);
         return ButtonSegment<int>(
           value: d,
@@ -248,9 +287,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 }
 
 class _StatsLineChart extends StatelessWidget {
-  const _StatsLineChart({required this.aggregated});
+  const _StatsLineChart({
+    required this.aggregated,
+    required this.visibleMetrics,
+  });
 
   final List<StatsDayData> aggregated;
+  final List<bool> visibleMetrics;
 
   double _getValue(StatsDayData d, int index) {
     switch (index) {
@@ -332,17 +375,22 @@ class _StatsLineChart extends StatelessWidget {
                 if (index < 0 || index >= aggregated.length) {
                   return const SizedBox.shrink();
                 }
-                final step = n > 14 ? (n / 7).ceil() : 1;
-                if (step > 1 && index % step != 0 && index != n - 1) {
+                // 最大7ラベルになるよう間引き
+                final maxLabels = 6;
+                final step = (n / maxLabels).ceil().clamp(1, 999);
+                if (index % step != 0 && index != n - 1) {
                   return const SizedBox.shrink();
                 }
                 final date = aggregated[index].date;
-                final label = '${date.month}/${date.day}';
+                // 90日以上は月/日、全期間は年/月
+                final label = n > 60
+                    ? '${date.month}/${date.day}'
+                    : '${date.month}/${date.day}';
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
                   ),
                 );
               },
@@ -351,6 +399,9 @@ class _StatsLineChart extends StatelessWidget {
         ),
         borderData: FlBorderData(show: false),
         lineBarsData: List.generate(5, (i) {
+          if (!visibleMetrics[i]) {
+            return LineChartBarData(spots: const [], color: Colors.transparent);
+          }
           final spots = aggregated
               .asMap()
               .entries
@@ -362,10 +413,10 @@ class _StatsLineChart extends StatelessWidget {
             color: _metricColors[i],
             barWidth: 2.5,
             dotData: FlDotData(
-              show: true,
+              show: aggregated.length <= 14,
               getDotPainter: (spot, percent, barData, index) =>
                   FlDotCirclePainter(
-                radius: 4,
+                radius: 3,
                 color: _metricColors[i],
                 strokeWidth: 0,
               ),

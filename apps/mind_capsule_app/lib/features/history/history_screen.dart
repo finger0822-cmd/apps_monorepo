@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/mind_entry.dart';
+import '../settings/settings_provider.dart';
 import 'history_detail_screen.dart';
 import 'history_provider.dart';
 
 final _dateFormat = DateFormat('yyyy/MM/dd');
 
 const _axisEmojis = ['⚡', '🎯', '😴', '😊', '🌙'];
-const _axisLabels = ['気力', '集中', '疲れ', '気分', '眠気'];
 
 Color _scoreColor(double avg) {
   if (avg < 2.5) return const Color(0xFFE57373);
@@ -24,18 +25,20 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(historyEntriesProvider);
+    final lang = ref.watch(appLanguageProvider);
+    final s = AppStrings.of(lang);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '履歴',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        title: Text(
+          s.historyTitle,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('エラー: $e', style: Theme.of(context).textTheme.bodySmall),
+          child: Text('${s.historyError}: $e', style: Theme.of(context).textTheme.bodySmall),
         ),
         data: (entries) {
           if (entries.isEmpty) {
@@ -46,14 +49,14 @@ class HistoryScreen extends ConsumerWidget {
                   const Text('📖', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 16),
                   Text(
-                    'まだ記録がありません',
+                    s.historyEmpty,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '記録タブから今日の気持ちを残しましょう',
+                    s.historyEmptySubtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey,
                         ),
@@ -67,7 +70,7 @@ class HistoryScreen extends ConsumerWidget {
             itemCount: entries.length,
             itemBuilder: (context, index) {
               final entry = entries[index];
-              return _HistoryCard(entry: entry);
+              return _HistoryCard(entry: entry, lang: lang);
             },
           );
         },
@@ -77,12 +80,15 @@ class HistoryScreen extends ConsumerWidget {
 }
 
 class _HistoryCard extends StatelessWidget {
-  const _HistoryCard({required this.entry});
+  const _HistoryCard({required this.entry, required this.lang});
 
   final MindEntry entry;
+  final String lang;
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(lang);
+    final axisLabels = s.axisLabelsShort;
     final firstLine = entry.text.split('\n').first.trim();
     final displayText =
         firstLine.length > 80 ? '${firstLine.substring(0, 80)}...' : firstLine;
@@ -153,7 +159,7 @@ class _HistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _axisLabels[i],
+                    axisLabels[i],
                     style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                 ],
@@ -163,7 +169,7 @@ class _HistoryCard extends StatelessWidget {
           const SizedBox(height: 10),
           // 下段：日記テキスト
           Text(
-            displayText.isEmpty ? '(本文なし)' : displayText,
+            displayText.isEmpty ? s.historyNoText : displayText,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.black87,
                 ),
@@ -182,7 +188,7 @@ class _HistoryCard extends StatelessWidget {
                 childrenPadding: const EdgeInsets.only(bottom: 8),
                 leading: const Text('✨', style: TextStyle(fontSize: 14)),
                 title: Text(
-                  'AI要約',
+                  s.historyAiSummary,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF6A3DE8),
