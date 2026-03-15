@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_strings.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/services/subscription_service.dart';
 import '../../domain/models/mind_entry.dart';
+import '../paywall/paywall_screen.dart';
 import 'settings_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -14,52 +16,23 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _apiKeyController = TextEditingController();
-  bool _obscureApiKey = true;
-  bool _isSavingKey = false;
-
-  @override
-  void dispose() {
-    _apiKeyController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveApiKey() async {
-    final key = _apiKeyController.text.trim();
-    if (key.isEmpty) {
-      if (mounted) {
-        final s = AppStrings.of(ref.read(appLanguageProvider));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.settingsApiKeyEmpty)),
-        );
-      }
-      return;
-    }
-    setState(() => _isSavingKey = true);
-    await ref.read(apiKeyAsyncProvider.notifier).save(key);
-    if (mounted) {
-      setState(() => _isSavingKey = false);
-      _apiKeyController.clear();
-      final s = AppStrings.of(ref.read(appLanguageProvider));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.settingsApiKeySaved)),
-      );
-    }
-  }
-
-  Future<void> _deleteApiKey() async {
-    await ref.read(apiKeyAsyncProvider.notifier).delete();
-    if (mounted) {
-      final s = AppStrings.of(ref.read(appLanguageProvider));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.settingsApiKeyDeleted)),
-      );
-    }
+  /// モーダルで PaywallScreen を表示する
+  void _showPaywall(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.9,
+        child: const PaywallScreen(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final apiKeyAsync = ref.watch(apiKeyAsyncProvider);
     final settingsAsync = ref.watch(settingsProvider);
     final lang = ref.watch(appLanguageProvider);
     final s = AppStrings.of(lang);
@@ -69,68 +42,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Claude API キー ──
-          Text(s.settingsApiKey,
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          apiKeyAsync.when(
-            data: (key) {
-              if (key != null && key.isNotEmpty) {
-                final display =
-                    key.length > 20 ? '${key.substring(0, 20)}...' : key;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle,
-                          color: Colors.green.shade700, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(display,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontFamily: 'monospace')),
-                      ),
-                      TextButton(
-                          onPressed: _deleteApiKey,
-                          child: Text(s.settingsApiKeyDelete)),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-          TextField(
-            controller: _apiKeyController,
-            obscureText: _obscureApiKey,
-            decoration: InputDecoration(
-              hintText: 'sk-ant-...',
-              border: const OutlineInputBorder(),
-              suffixIcon: IconButton(
-                icon: Icon(_obscureApiKey
-                    ? Icons.visibility
-                    : Icons.visibility_off),
-                onPressed: () =>
-                    setState(() => _obscureApiKey = !_obscureApiKey),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: _isSavingKey ? null : _saveApiKey,
-            child: _isSavingKey
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(s.settingsApiKeySave),
-          ),
-          const SizedBox(height: 24),
-
           // ── 言語 ──
           Text(s.settingsLanguage, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -175,6 +86,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             error: (_, __) => const ListTile(title: Text('エラー')),
           ),
 
+          const SizedBox(height: 24),
+
+          // ── サブスクリプション ──
+          Text(s.subscription,
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          ref.watch(subscriptionProvider).when(
+            data: (state) {
+              if (state.isPremium) {
+                return ListTile(
+                  leading: const Icon(Icons.workspace_premium,
+                      color: Colors.amber),
+                  title: Text(s.premiumMember),
+                  subtitle: Text(s.premiumSubtitle),
+                );
+              }
+              return ListTile(
+                leading: const Icon(Icons.star_outline),
+                title: Text(s.premiumUpgrade),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showPaywall(context),
+              );
+            },
+            loading: () => ListTile(title: Text(s.loading)),
+            error: (_, __) => ListTile(title: Text(s.error)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restore),
+            title: Text(s.restorePurchase),
+            onTap: () async {
+              try {
+                await ref.read(subscriptionProvider.notifier).restorePurchases();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(s.restorePurchaseDone)),
+                  );
+                }
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(s.errorOccurred)),
+                  );
+                }
+              }
+            },
+          ),
+
           const SizedBox(height: 32),
           // ── DEBUGボタン（リリース前に削除） ──
           const Divider(),
@@ -198,11 +156,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('365日分のテストデータを追加しました')),
+                  SnackBar(content: Text(s.testData365DaysAdded)),
                 );
               }
             },
-            child: const Text('🧪 テストデータ365日追加'),
+            child: Text(s.testData365DaysButton),
           ),
           // ── バージョン ──
           Center(

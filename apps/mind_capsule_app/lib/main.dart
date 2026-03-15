@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mind_capsule_app/services/revenue_cat_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/notifications/notification_service.dart';
@@ -17,6 +18,7 @@ import 'features/stats/stats_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await RevenueCatService.initialize();
   await initializeDateFormatting('ja_JP', null);
   final isar = await IsarService.open();
   await NotificationService.initialize();
