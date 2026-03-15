@@ -4,22 +4,23 @@ import '../../domain/models/mind_entry.dart';
 
 /// 指定日数分のエントリを取得（日付昇順でグラフ用）
 /// days = 0 のとき全期間
-final statsEntriesProvider = FutureProvider.family<List<MindEntry>, int>(
-  (ref, days) async {
-    final repo = ref.watch(entryRepositoryProvider);
-    List<MindEntry> list;
-    if (days == 0) {
-      list = await repo.getAll();
-    } else {
-      final limit = days * 2;
-      list = await repo.getRecent(limit);
-      final since = DateTime.now().subtract(Duration(days: days));
-      list = list.where((e) => !e.createdAt.isBefore(since)).toList();
-    }
-    list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return list;
-  },
-);
+final statsEntriesProvider = FutureProvider.family<List<MindEntry>, int>((
+  ref,
+  days,
+) async {
+  final repo = ref.watch(entryRepositoryProvider);
+  List<MindEntry> list;
+  if (days == 0) {
+    list = await repo.getAll();
+  } else {
+    final limit = days * 2;
+    list = await repo.getRecent(limit);
+    final since = DateTime.now().subtract(Duration(days: days));
+    list = list.where((e) => !e.createdAt.isBefore(since)).toList();
+  }
+  list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  return list;
+});
 
 /// 日付ごとに集約したデータ（1日複数件は平均）
 class StatsDayData {
@@ -55,12 +56,17 @@ List<StatsDayData> aggregateByDay(List<MindEntry> entries) {
       list.first.createdAt.month,
       list.first.createdAt.day,
     );
-    final energy = list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
-    final focus = list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
-    final fatigue = list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
+    final energy =
+        list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
+    final focus =
+        list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
+    final fatigue =
+        list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
     final mood = list.map((e) => e.mood).reduce((a, b) => a + b) / list.length;
-    final sleepiness = list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
-    final avg = list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
+    final sleepiness =
+        list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
+    final avg =
+        list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
     return StatsDayData(
       date: date,
       energy: energy,
@@ -87,15 +93,31 @@ List<StatsDayData> aggregateByWeek(List<MindEntry> entries) {
   final result = grouped.entries.map((g) {
     final list = g.value;
     final parts = g.key.split('-');
-    final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-    final energy = list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
-    final focus = list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
-    final fatigue = list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
+    final date = DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+    final energy =
+        list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
+    final focus =
+        list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
+    final fatigue =
+        list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
     final mood = list.map((e) => e.mood).reduce((a, b) => a + b) / list.length;
-    final sleepiness = list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
-    final avg = list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
-    return StatsDayData(date: date, energy: energy, focus: focus,
-        fatigue: fatigue, mood: mood, sleepiness: sleepiness, averageScore: avg);
+    final sleepiness =
+        list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
+    final avg =
+        list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
+    return StatsDayData(
+      date: date,
+      energy: energy,
+      focus: focus,
+      fatigue: fatigue,
+      mood: mood,
+      sleepiness: sleepiness,
+      averageScore: avg,
+    );
   }).toList();
   result.sort((a, b) => a.date.compareTo(b.date));
   return result;
@@ -112,14 +134,26 @@ List<StatsDayData> aggregateByMonth(List<MindEntry> entries) {
     final list = g.value;
     final parts = g.key.split('-');
     final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), 1);
-    final energy = list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
-    final focus = list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
-    final fatigue = list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
+    final energy =
+        list.map((e) => e.energy).reduce((a, b) => a + b) / list.length;
+    final focus =
+        list.map((e) => e.focus).reduce((a, b) => a + b) / list.length;
+    final fatigue =
+        list.map((e) => e.fatigue).reduce((a, b) => a + b) / list.length;
     final mood = list.map((e) => e.mood).reduce((a, b) => a + b) / list.length;
-    final sleepiness = list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
-    final avg = list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
-    return StatsDayData(date: date, energy: energy, focus: focus,
-        fatigue: fatigue, mood: mood, sleepiness: sleepiness, averageScore: avg);
+    final sleepiness =
+        list.map((e) => e.sleepiness).reduce((a, b) => a + b) / list.length;
+    final avg =
+        list.map((e) => e.averageScore).reduce((a, b) => a + b) / list.length;
+    return StatsDayData(
+      date: date,
+      energy: energy,
+      focus: focus,
+      fatigue: fatigue,
+      mood: mood,
+      sleepiness: sleepiness,
+      averageScore: avg,
+    );
   }).toList();
   result.sort((a, b) => a.date.compareTo(b.date));
   return result;

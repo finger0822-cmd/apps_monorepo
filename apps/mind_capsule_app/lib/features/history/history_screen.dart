@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_strings.dart';
-import '../../core/theme/app_theme.dart';
 import '../../domain/models/mind_entry.dart';
 import '../settings/settings_provider.dart';
 import 'history_detail_screen.dart';
@@ -38,7 +37,10 @@ class HistoryScreen extends ConsumerWidget {
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('${s.historyError}: $e', style: Theme.of(context).textTheme.bodySmall),
+          child: Text(
+            '${s.historyError}: $e',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         data: (entries) {
           if (entries.isEmpty) {
@@ -51,15 +53,15 @@ class HistoryScreen extends ConsumerWidget {
                   Text(
                     s.historyEmpty,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     s.historyEmptySubtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),
                 ],
               ),
@@ -90,8 +92,9 @@ class _HistoryCard extends StatelessWidget {
     final s = AppStrings.of(lang);
     final axisLabels = s.axisLabelsShort;
     final firstLine = entry.text.split('\n').first.trim();
-    final displayText =
-        firstLine.length > 80 ? '${firstLine.substring(0, 80)}...' : firstLine;
+    final displayText = firstLine.length > 80
+        ? '${firstLine.substring(0, 80)}...'
+        : firstLine;
     final hasFeedback =
         entry.aiFeedback != null && entry.aiFeedback!.isNotEmpty;
     final avg = entry.averageScore;
@@ -115,9 +118,9 @@ class _HistoryCard extends StatelessWidget {
               Text(
                 _dateFormat.format(entry.createdAt),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               if (entry.isTimeCapsule) ...[
                 const SizedBox(width: 6),
@@ -125,8 +128,10 @@ class _HistoryCard extends StatelessWidget {
               ],
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: _scoreColor(avg),
                   borderRadius: BorderRadius.circular(12),
@@ -170,9 +175,9 @@ class _HistoryCard extends StatelessWidget {
           // 下段：日記テキスト
           Text(
             displayText.isEmpty ? s.historyNoText : displayText,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black87,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.black87),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -180,9 +185,9 @@ class _HistoryCard extends StatelessWidget {
           if (hasFeedback) ...[
             const SizedBox(height: 4),
             Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-              ),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: const EdgeInsets.only(bottom: 8),
@@ -190,9 +195,9 @@ class _HistoryCard extends StatelessWidget {
                 title: Text(
                   s.historyAiSummary,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6A3DE8),
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6A3DE8),
+                  ),
                 ),
                 children: [
                   Container(
@@ -205,9 +210,9 @@ class _HistoryCard extends StatelessWidget {
                     child: Text(
                       entry.aiFeedback!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black87,
-                          ),
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 ],

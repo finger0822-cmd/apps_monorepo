@@ -31,27 +31,25 @@ abstract final class AppTheme {
         color: Colors.white,
         elevation: 2,
         shadowColor: Colors.black26,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       textTheme: ThemeData.light().textTheme.copyWith(
-            bodyLarge: const TextStyle(
-              fontSize: 18,
-              color: Colors.black87,
-              height: 1.5,
-            ),
-          ),
+        bodyLarge: const TextStyle(
+          fontSize: 18,
+          color: Colors.black87,
+          height: 1.5,
+        ),
+      ),
     );
   }
 
   /// ダークテーマ（オプション）
   static ThemeData get dark => ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9B7EC8),
-          brightness: Brightness.dark,
-        ),
-      );
+    useMaterial3: true,
+    scaffoldBackgroundColor: const Color(0xFF121212),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF9B7EC8),
+      brightness: Brightness.dark,
+    ),
+  );
 }

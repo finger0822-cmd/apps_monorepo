@@ -27,10 +27,7 @@ class ClaudeService {
       'max_tokens': _maxTokens,
       'system': systemPrompt,
       'messages': [
-        {
-          'role': 'user',
-          'content': userContent,
-        },
+        {'role': 'user', 'content': userContent},
       ],
     };
 
@@ -82,10 +79,7 @@ class ClaudeService {
 
 /// Claude API 呼び出し時の例外
 class ClaudeServiceException implements Exception {
-  const ClaudeServiceException({
-    required this.statusCode,
-    required this.body,
-  });
+  const ClaudeServiceException({required this.statusCode, required this.body});
 
   final int statusCode;
   final String body;

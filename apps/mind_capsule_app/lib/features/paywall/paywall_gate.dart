@@ -32,10 +32,7 @@ class PaywallGate extends ConsumerWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   ),
                 ),
                 child: SafeArea(
@@ -44,7 +41,8 @@ class PaywallGate extends ConsumerWidget {
                     children: [
                       Text(
                         '✨ プレミアムで全機能解放',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),

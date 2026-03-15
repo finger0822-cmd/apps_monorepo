@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/providers/app_providers.dart';
 import '../settings/settings_provider.dart';
 import '../../domain/models/mind_entry.dart';
+
 /// タイムカプセル開封画面。過去のメッセージと AI 比較分析を表示
 class CapsuleOpenScreen extends ConsumerStatefulWidget {
   const CapsuleOpenScreen({super.key, required this.entryId});
@@ -27,9 +28,10 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _animOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeIn),
-    );
+    _animOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeIn));
     _animController.forward();
   }
 
@@ -57,7 +59,8 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
           );
         }
         final entry = snapshot.data!;
-        final isSealed = entry.isSealed &&
+        final isSealed =
+            entry.isSealed &&
             entry.openOn != null &&
             entry.openOn!.isAfter(DateTime.now());
 
@@ -74,7 +77,8 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
                     const SizedBox(height: 24),
                     Text(
                       '封印中',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF6A3DE8),
                           ),
@@ -82,16 +86,16 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
                     const SizedBox(height: 12),
                     Text(
                       '開封日: ${dateFormat.format(entry.openOn!)}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'あと ${entry.openOn!.difference(DateTime.now()).inDays + 1} 日後に開封できます',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                     ),
                   ],
                 ),
@@ -130,9 +134,9 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -144,9 +148,9 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
                   ],
                   Text(
                     entry.text,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.6,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.6),
                   ),
                   const SizedBox(height: 32),
                   Text(
@@ -167,10 +171,7 @@ class _CapsuleOpenScreenState extends ConsumerState<CapsuleOpenScreen>
 
 /// AI 比較分析を非同期で取得して表示するウィジェット
 class _AiComparisonSection extends ConsumerStatefulWidget {
-  const _AiComparisonSection({
-    required this.entryId,
-    required this.language,
-  });
+  const _AiComparisonSection({required this.entryId, required this.language});
 
   final int entryId;
   final String language;
@@ -192,8 +193,10 @@ class _AiComparisonSectionState extends ConsumerState<_AiComparisonSection> {
 
   Future<void> _load() async {
     final repo = ref.read(entryRepositoryProvider);
-    final result =
-        await repo.fetchAiComparison(widget.entryId, widget.language);
+    final result = await repo.fetchAiComparison(
+      widget.entryId,
+      widget.language,
+    );
     if (!mounted) return;
     setState(() {
       _comparison = result;

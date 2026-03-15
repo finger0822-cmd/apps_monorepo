@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/providers/app_providers.dart';
 import '../../domain/models/mind_entry.dart';
 import 'capsule_open_screen.dart';
@@ -126,16 +125,16 @@ class _CapsuleList extends ConsumerWidget {
                   Text(
                     emptyMessage,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     emptySubMessage,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -174,8 +173,9 @@ class _CapsuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('yyyy/MM/dd');
-    final openOnStr =
-        entry.openOn != null ? dateFormat.format(entry.openOn!) : '-';
+    final openOnStr = entry.openOn != null
+        ? dateFormat.format(entry.openOn!)
+        : '-';
     int? daysLeft;
     if (isSealed && entry.openOn != null) {
       final now = DateTime.now();
@@ -227,9 +227,9 @@ class _CapsuleCard extends StatelessWidget {
                       children: [
                         Text(
                           openOnStr,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                         ),
                         const Spacer(),
                         if (!isSealed)
@@ -245,10 +245,10 @@ class _CapsuleCard extends StatelessWidget {
                     Text(
                       isSealed && daysLeft != null
                           ? (daysLeft <= 0
-                              ? '🎉 開封日です！'
-                              : daysLeft == 1
-                                  ? '⏰ あと 1 日'
-                                  : 'あと $daysLeft 日')
+                                ? '🎉 開封日です！'
+                                : daysLeft == 1
+                                ? '⏰ あと 1 日'
+                                : 'あと $daysLeft 日')
                           : '開封済み',
                       style: TextStyle(
                         fontSize: 16,
@@ -260,11 +260,15 @@ class _CapsuleCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isSealed ? '🔒 封印中' : (diaryLine.isEmpty ? '(日記なし)' : diaryLine),
+                      isSealed
+                          ? '🔒 封印中'
+                          : (diaryLine.isEmpty ? '(日記なし)' : diaryLine),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isSealed ? const Color(0xFF9C6FE4) : Colors.grey,
-                            fontWeight: isSealed ? FontWeight.w600 : FontWeight.normal,
-                          ),
+                        color: isSealed ? const Color(0xFF9C6FE4) : Colors.grey,
+                        fontWeight: isSealed
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -272,11 +276,7 @@ class _CapsuleCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
-                Icons.chevron_right,
-                color: Colors.grey,
-                size: 20,
-              ),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
             ],
           ),
         ),

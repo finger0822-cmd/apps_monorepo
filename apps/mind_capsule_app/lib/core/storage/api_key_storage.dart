@@ -11,9 +11,8 @@ const String _keyClaudeApiKey = 'mind_capsule_claude_api_key';
 
 /// FlutterSecureStorage を用いた API キー保存の実装
 class ApiKeyStorageImpl implements ApiKeyStorage {
-  ApiKeyStorageImpl({
-    FlutterSecureStorage? storage,
-  }) : _storage = storage ?? const FlutterSecureStorage();
+  ApiKeyStorageImpl({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 

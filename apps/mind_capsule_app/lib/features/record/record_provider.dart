@@ -87,11 +87,13 @@ class RecordNotifier extends Notifier<RecordState> {
     final repo = ref.read(entryRepositoryProvider);
     final all = await repo.getAll();
     final now = DateTime.now();
-    final savedToday = all.any((e) =>
-        e.openOn == null &&
-        e.createdAt.year == now.year &&
-        e.createdAt.month == now.month &&
-        e.createdAt.day == now.day);
+    final savedToday = all.any(
+      (e) =>
+          e.openOn == null &&
+          e.createdAt.year == now.year &&
+          e.createdAt.month == now.month &&
+          e.createdAt.day == now.day,
+    );
 
     state = state.copyWith(
       timerUsedToday: timerUsed,
@@ -108,7 +110,8 @@ class RecordNotifier extends Notifier<RecordState> {
   void setFocus(int v) => state = state.copyWith(focus: v.clamp(1, 5));
   void setFatigue(int v) => state = state.copyWith(fatigue: v.clamp(1, 5));
   void setMood(int v) => state = state.copyWith(mood: v.clamp(1, 5));
-  void setSleepiness(int v) => state = state.copyWith(sleepiness: v.clamp(1, 5));
+  void setSleepiness(int v) =>
+      state = state.copyWith(sleepiness: v.clamp(1, 5));
   void setText(String v) => state = state.copyWith(text: v, saveError: '');
 
   Future<void> setTimerUsedToday(bool v) async {
@@ -128,11 +131,13 @@ class RecordNotifier extends Notifier<RecordState> {
     final repo = ref.read(entryRepositoryProvider);
     final all = await repo.getAll();
     final now = DateTime.now();
-    final savedToday = all.any((e) =>
-        e.openOn == null &&
-        e.createdAt.year == now.year &&
-        e.createdAt.month == now.month &&
-        e.createdAt.day == now.day);
+    final savedToday = all.any(
+      (e) =>
+          e.openOn == null &&
+          e.createdAt.year == now.year &&
+          e.createdAt.month == now.month &&
+          e.createdAt.day == now.day,
+    );
     if (savedToday) {
       state = state.copyWith(
         alreadySavedToday: true,
@@ -172,10 +177,7 @@ class RecordNotifier extends Notifier<RecordState> {
         alreadySavedToday: true,
       );
       final feedback = await repo.fetchAiFeedback(entry.id, language);
-      state = state.copyWith(
-        aiFeedback: feedback,
-        aiFeedbackLoading: false,
-      );
+      state = state.copyWith(aiFeedback: feedback, aiFeedbackLoading: false);
     } catch (e, st) {
       state = state.copyWith(
         isSaving: false,
@@ -200,5 +202,6 @@ class RecordNotifier extends Notifier<RecordState> {
   }
 }
 
-final recordProvider =
-    NotifierProvider<RecordNotifier, RecordState>(RecordNotifier.new);
+final recordProvider = NotifierProvider<RecordNotifier, RecordState>(
+  RecordNotifier.new,
+);

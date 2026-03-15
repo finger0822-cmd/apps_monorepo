@@ -23,9 +23,6 @@ class IsarService {
     }
 
     final dir = await getApplicationDocumentsDirectory();
-    return Isar.open(
-      <CollectionSchema>[MindEntrySchema],
-      directory: dir.path,
-    );
+    return Isar.open(<CollectionSchema>[MindEntrySchema], directory: dir.path);
   }
 }

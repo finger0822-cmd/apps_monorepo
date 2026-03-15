@@ -12,5 +12,15 @@ abstract class EntryRepository {
   Future<List<MindEntry>> getRecent(int limit);
   // ── AI分析 ───────────────────────────────────
   Future<String?> fetchAiFeedback(int id, String language);
-  Future<String?> fetchAiPeriodAnalysis(List<int> entryIds, int days, String language);
+  Future<String?> fetchAiPeriodAnalysis(
+    List<int> entryIds,
+    int days,
+    String language,
+  );
+  Future<String?> fetchAiComparison(int id, String language);
+
+  // ── タイムカプセル ─────────────────────────────
+  Future<List<MindEntry>> getSealedCapsules();
+  Future<List<MindEntry>> getOpenedCapsules();
+  Future<void> openDueCapsules();
 }

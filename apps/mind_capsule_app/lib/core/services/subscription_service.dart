@@ -10,10 +10,7 @@ class SubscriptionLimits {
 
 /// サブスク状態（RevenueCat 連携）
 class SubscriptionState {
-  const SubscriptionState({
-    this.isPremium = false,
-    this.aiUsedThisMonth = 0,
-  });
+  const SubscriptionState({this.isPremium = false, this.aiUsedThisMonth = 0});
 
   final bool isPremium;
   final int aiUsedThisMonth;
@@ -47,8 +44,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   }
 
   SubscriptionState _stateFromCustomerInfo(CustomerInfo info) {
-    final isPremium =
-        info.entitlements.active[_entitlementId] != null;
+    final isPremium = info.entitlements.active[_entitlementId] != null;
     final current = state.valueOrNull;
     return SubscriptionState(
       isPremium: isPremium,
@@ -59,10 +55,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   Future<void> incrementAiUsage() async {
     final current = state.valueOrNull;
     if (current == null) return;
-    state = AsyncData(SubscriptionState(
-      isPremium: current.isPremium,
-      aiUsedThisMonth: current.aiUsedThisMonth + 1,
-    ));
+    state = AsyncData(
+      SubscriptionState(
+        isPremium: current.isPremium,
+        aiUsedThisMonth: current.aiUsedThisMonth + 1,
+      ),
+    );
   }
 
   Future<void> reload() async {
@@ -71,10 +69,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     try {
       final info = await Purchases.getCustomerInfo();
       final next = _stateFromCustomerInfo(info);
-      state = AsyncData(SubscriptionState(
-        isPremium: next.isPremium,
-        aiUsedThisMonth: previous?.aiUsedThisMonth ?? next.aiUsedThisMonth,
-      ));
+      state = AsyncData(
+        SubscriptionState(
+          isPremium: next.isPremium,
+          aiUsedThisMonth: previous?.aiUsedThisMonth ?? next.aiUsedThisMonth,
+        ),
+      );
     } catch (_) {
       rethrow;
     }
@@ -107,4 +107,5 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
 final subscriptionProvider =
     AsyncNotifierProvider<SubscriptionNotifier, SubscriptionState>(
-        SubscriptionNotifier.new);
+      SubscriptionNotifier.new,
+    );

@@ -85,17 +85,16 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                 Text(
                   s.alreadySavedTitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6A3DE8),
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF6A3DE8),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   s.alreadySavedSubtitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.grey),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 ),
               ],
             ),
@@ -112,7 +111,8 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           // 5軸カード
           Card(
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
             elevation: 2,
             shadowColor: Colors.black12,
             child: Padding(
@@ -124,7 +124,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                     state.focus,
                     state.fatigue,
                     state.mood,
-                    state.sleepiness
+                    state.sleepiness,
                   ][i];
                   final setter = [
                     ref.read(recordProvider.notifier).setEnergy,
@@ -139,8 +139,10 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                       children: [
                         SizedBox(
                           width: 64,
-                          child: Text(labels[i],
-                              style: const TextStyle(fontSize: 13)),
+                          child: Text(
+                            labels[i],
+                            style: const TextStyle(fontSize: 13),
+                          ),
                         ),
                         Expanded(
                           child: Slider(
@@ -181,22 +183,22 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           // 1分タイマーカード
           Card(
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
             elevation: 2,
             shadowColor: Colors.black12,
-            color: _timerEnabled
-                ? const Color(0xFF6A3DE8)
-                : Colors.white,
+            color: _timerEnabled ? const Color(0xFF6A3DE8) : Colors.white,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
                   Row(
                     children: [
                       Icon(
                         Icons.timer_outlined,
-                        color: _timerEnabled ? Colors.white : const Color(0xFF6A3DE8),
+                        color: _timerEnabled
+                            ? Colors.white
+                            : const Color(0xFF6A3DE8),
                         size: 22,
                       ),
                       const SizedBox(width: 8),
@@ -211,8 +213,8 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                             color: _timerEnabled
                                 ? Colors.white
                                 : state.timerUsedToday
-                                    ? Colors.grey
-                                    : const Color(0xFF6A3DE8),
+                                ? Colors.grey
+                                : const Color(0xFF6A3DE8),
                           ),
                         ),
                       ),
@@ -239,8 +241,9 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                             child: CircularProgressIndicator(
                               value: _countdownSeconds / 60,
                               strokeWidth: 6,
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.3),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.3,
+                              ),
                               color: Colors.white,
                             ),
                           ),
@@ -288,15 +291,13 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
               decoration: InputDecoration(
                 labelText: s.diaryLabel,
                 labelStyle: TextStyle(
-                  color: timerActive
-                      ? const Color(0xFF6A3DE8)
-                      : Colors.grey,
+                  color: timerActive ? const Color(0xFF6A3DE8) : Colors.grey,
                 ),
                 hintText: timerActive
                     ? s.diaryHint
                     : _timerEnabled && _countdownSeconds == 0
-                        ? s.diaryHintTimerEnd
-                        : s.diaryHintTimerOff,
+                    ? s.diaryHintTimerEnd
+                    : s.diaryHintTimerOff,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -311,8 +312,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 state.saveError!,
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.error),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
 
@@ -341,9 +341,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                 onTap: state.isSaving || state.alreadySavedToday
                     ? null
                     : () async {
-                        await ref
-                            .read(recordProvider.notifier)
-                            .save(lang);
+                        await ref.read(recordProvider.notifier).save(lang);
                         final saved = ref.read(recordProvider);
                         if (saved.saveError == null ||
                             saved.saveError!.isEmpty) {
@@ -365,7 +363,9 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                             ),
                           )
                         : Text(
-                            state.alreadySavedToday ? s.savedButton : s.saveButton,
+                            state.alreadySavedToday
+                                ? s.savedButton
+                                : s.saveButton,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -381,59 +381,67 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           // AI フィードバック
           if (state.savedEntryId != null) ...[
             const SizedBox(height: 24),
-            Text(s.aiSummaryTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              s.aiSummaryTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Consumer(builder: (context, ref, _) {
-              final sub = ref.watch(subscriptionProvider).valueOrNull;
-              final aiLocked = sub != null && !sub.canUseAi;
-              if (aiLocked) {
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.lightPurple.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.lock_outline,
-                          size: 16, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Text(
-                        s.aiLockedMessage,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Colors.grey),
-                      ),
-                    ],
-                  ),
+            Consumer(
+              builder: (context, ref, _) {
+                final sub = ref.watch(subscriptionProvider).valueOrNull;
+                final aiLocked = sub != null && !sub.canUseAi;
+                if (aiLocked) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.lightPurple.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.lock_outline,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          s.aiLockedMessage,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                if (state.aiFeedbackLoading) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (state.aiFeedback != null) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F0FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      state.aiFeedback!,
+                      style: const TextStyle(height: 1.6),
+                    ),
+                  );
+                }
+                return Text(
+                  s.aiNoApiKey,
+                  style: Theme.of(context).textTheme.bodySmall,
                 );
-              }
-              if (state.aiFeedbackLoading) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (state.aiFeedback != null) {
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F0FF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(state.aiFeedback!,
-                      style: const TextStyle(height: 1.6)),
-                );
-              }
-              return Text(
-                s.aiNoApiKey,
-                style: Theme.of(context).textTheme.bodySmall,
-              );
-            }),
+              },
+            ),
           ],
           const SizedBox(height: 32),
         ],

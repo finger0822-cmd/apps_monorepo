@@ -8,10 +8,7 @@ const _keyNotificationsEnabled = 'mind_capsule_notifications_enabled';
 
 /// 設定状態（言語・通知ON/OFF）
 class SettingsState {
-  const SettingsState({
-    this.language = 'ja',
-    this.notificationsEnabled = true,
-  });
+  const SettingsState({this.language = 'ja', this.notificationsEnabled = true});
 
   final String language;
   final bool notificationsEnabled;
@@ -30,26 +27,32 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
   Future<SettingsState> build() async {
     final prefs = await SharedPreferences.getInstance();
     final lang = prefs.getString(_keyLanguage) ?? 'ja';
-    final notifications =
-        prefs.getBool(_keyNotificationsEnabled) ?? true;
+    final notifications = prefs.getBool(_keyNotificationsEnabled) ?? true;
     return SettingsState(language: lang, notificationsEnabled: notifications);
   }
 
   Future<void> setLanguage(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLanguage, value);
-    state = AsyncData((state.value ?? const SettingsState()).copyWith(language: value));
+    state = AsyncData(
+      (state.value ?? const SettingsState()).copyWith(language: value),
+    );
   }
 
   Future<void> setNotificationsEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyNotificationsEnabled, value);
-    state = AsyncData((state.value ?? const SettingsState()).copyWith(notificationsEnabled: value));
+    state = AsyncData(
+      (state.value ?? const SettingsState()).copyWith(
+        notificationsEnabled: value,
+      ),
+    );
   }
 }
 
-final settingsProvider =
-    AsyncNotifierProvider<SettingsNotifier, SettingsState>(SettingsNotifier.new);
+final settingsProvider = AsyncNotifierProvider<SettingsNotifier, SettingsState>(
+  SettingsNotifier.new,
+);
 
 /// 現在の表示言語（'ja' or 'en'）
 final appLanguageProvider = Provider<String>((ref) {
@@ -58,8 +61,9 @@ final appLanguageProvider = Provider<String>((ref) {
 });
 
 /// API キーの取得・保存用
-final apiKeyAsyncProvider =
-    AsyncNotifierProvider<ApiKeyAsyncNotifier, String?>(ApiKeyAsyncNotifier.new);
+final apiKeyAsyncProvider = AsyncNotifierProvider<ApiKeyAsyncNotifier, String?>(
+  ApiKeyAsyncNotifier.new,
+);
 
 class ApiKeyAsyncNotifier extends AsyncNotifier<String?> {
   @override
@@ -81,4 +85,6 @@ class ApiKeyAsyncNotifier extends AsyncNotifier<String?> {
   }
 }
 
-final apiKeyStorageProvider = Provider<ApiKeyStorage>((ref) => ApiKeyStorageImpl());
+final apiKeyStorageProvider = Provider<ApiKeyStorage>(
+  (ref) => ApiKeyStorageImpl(),
+);

@@ -11,8 +11,13 @@ class HistoryDetailScreen extends StatelessWidget {
 
   final MindEntry entry;
 
-  static List<int> _values(MindEntry e) =>
-      [e.energy, e.focus, e.fatigue, e.mood, e.sleepiness];
+  static List<int> _values(MindEntry e) => [
+    e.energy,
+    e.focus,
+    e.fatigue,
+    e.mood,
+    e.sleepiness,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +25,7 @@ class HistoryDetailScreen extends StatelessWidget {
     final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(dateFormat.format(entry.createdAt)),
-      ),
+      appBar: AppBar(title: Text(dateFormat.format(entry.createdAt))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -38,12 +41,17 @@ class HistoryDetailScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
-                  Text('${values[i]}', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    '${values[i]}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: LinearProgressIndicator(
                       value: values[i] / 5,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                     ),
                   ),
                 ],
@@ -51,28 +59,24 @@ class HistoryDetailScreen extends StatelessWidget {
               const SizedBox(height: 10),
             ],
             const SizedBox(height: 16),
-            Text(
-              '日記',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text('日記', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 6),
             Text(
               entry.text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.6),
             ),
             if (entry.aiFeedback != null && entry.aiFeedback!.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text(
-                'AI要約',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
+              Text('AI要約', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 6),
               Text(
                 entry.aiFeedback!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  height: 1.6,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ],

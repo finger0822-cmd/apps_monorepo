@@ -17,8 +17,10 @@ class PaywallScreen extends ConsumerStatefulWidget {
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// オファー取得中は true
   bool _loading = true;
+
   /// 取得したオファー（null の場合は未取得または取得失敗）
   Offering? _offering;
+
   /// 取得失敗時のメッセージ
   String? _errorMessage;
 
@@ -106,17 +108,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       onPurchaseError: (error) {
         if (_isCancelledError(error)) return;
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('エラーが発生しました')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('エラーが発生しました')));
         }
       },
       onRestoreError: (error) {
         if (_isCancelledError(error)) return;
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('エラーが発生しました')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('エラーが発生しました')));
         }
       },
       onDismiss: () => Navigator.of(context).pop(context),

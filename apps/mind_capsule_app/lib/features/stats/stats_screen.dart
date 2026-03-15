@@ -44,9 +44,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final s = AppStrings.of(lang);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(s.statsTitle),
-      ),
+      appBar: AppBar(title: Text(s.statsTitle)),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
@@ -65,21 +63,20 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           final aggregated = _selectedDays == 0
               ? aggregateByMonth(entries)
               : _selectedDays >= 90
-                  ? aggregateByWeek(entries)
-                  : aggregateByDay(entries);
+              ? aggregateByWeek(entries)
+              : aggregateByDay(entries);
 
           final aggregateLabel = _selectedDays == 0
               ? s.statsMonthAvg
               : _selectedDays >= 90
-                  ? s.statsWeekAvg
-                  : s.statsDayly;
+              ? s.statsWeekAvg
+              : s.statsDayly;
 
           if (aggregated.isEmpty) {
             return Center(child: Text(s.statsNoData));
           }
-          final avgScore = entries
-                  .map((e) => e.averageScore)
-                  .reduce((a, b) => a + b) /
+          final avgScore =
+              entries.map((e) => e.averageScore).reduce((a, b) => a + b) /
               entries.length;
 
           return ListView(
@@ -109,9 +106,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                       Text(
                         s.statsAvgNote,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -128,10 +125,15 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 child: Row(
                   children: List.generate(5, (i) {
                     return GestureDetector(
-                      onTap: () => setState(() => _visibleMetrics[i] = !_visibleMetrics[i]),
+                      onTap: () => setState(
+                        () => _visibleMetrics[i] = !_visibleMetrics[i],
+                      ),
                       child: Container(
                         margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: _visibleMetrics[i]
                               ? _metricColors[i].withValues(alpha: 0.15)
@@ -184,71 +186,83 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Consumer(builder: (context, ref, _) {
-                final sub = ref.watch(subscriptionProvider).valueOrNull;
-                final aiLocked = sub != null && !sub.canUseAi;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: aiLocked || _aiLoading
-                          ? null
-                          : () async {
-                              setState(() {
-                                _aiLoading = true;
-                                _aiAnalysis = null;
-                              });
-                              final repo = ref.read(entryRepositoryProvider);
-                              final lang = ref.read(appLanguageProvider);
-                              final entries = await ref.read(
-                                  statsEntriesProvider(_selectedDays).future);
-                              final ids = entries.map((e) => e.id).toList();
-                              final result = await repo.fetchAiPeriodAnalysis(
-                                  ids, _selectedDays, lang);
-                              ref.read(subscriptionProvider.notifier).incrementAiUsage();
-                              setState(() {
-                                _aiAnalysis = result;
-                                _aiLoading = false;
-                              });
-                            },
-                      icon: _aiLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('✨'),
-                      label: Text(aiLocked
-                          ? s.statsAiLocked
-                          : _aiLoading
+              Consumer(
+                builder: (context, ref, _) {
+                  final sub = ref.watch(subscriptionProvider).valueOrNull;
+                  final aiLocked = sub != null && !sub.canUseAi;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: aiLocked || _aiLoading
+                            ? null
+                            : () async {
+                                setState(() {
+                                  _aiLoading = true;
+                                  _aiAnalysis = null;
+                                });
+                                final repo = ref.read(entryRepositoryProvider);
+                                final lang = ref.read(appLanguageProvider);
+                                final entries = await ref.read(
+                                  statsEntriesProvider(_selectedDays).future,
+                                );
+                                final ids = entries.map((e) => e.id).toList();
+                                final result = await repo.fetchAiPeriodAnalysis(
+                                  ids,
+                                  _selectedDays,
+                                  lang,
+                                );
+                                ref
+                                    .read(subscriptionProvider.notifier)
+                                    .incrementAiUsage();
+                                setState(() {
+                                  _aiAnalysis = result;
+                                  _aiLoading = false;
+                                });
+                              },
+                        icon: _aiLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('✨'),
+                        label: Text(
+                          aiLocked
+                              ? s.statsAiLocked
+                              : _aiLoading
                               ? s.statsAiLoading
-                              : s.statsAiButton),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A3DE8),
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey.shade200,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                              : s.statsAiButton,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A3DE8),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey.shade200,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
-                    ),
-                    if (_aiAnalysis != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F0FF),
-                          borderRadius: BorderRadius.circular(12),
+                      if (_aiAnalysis != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F0FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _aiAnalysis!,
+                            style: const TextStyle(height: 1.6),
+                          ),
                         ),
-                        child: Text(
-                          _aiAnalysis!,
-                          style: const TextStyle(height: 1.6),
-                        ),
-                      ),
+                      ],
                     ],
-                  ],
-                );
-              }),
+                  );
+                },
+              ),
             ],
           );
         },
@@ -256,7 +270,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildPeriodSelector(AsyncValue<SubscriptionState> subAsync, AppStrings s) {
+  Widget _buildPeriodSelector(
+    AsyncValue<SubscriptionState> subAsync,
+    AppStrings s,
+  ) {
     final sub = subAsync.valueOrNull;
     return SegmentedButton<int>(
       segments: _periods.map((d) {
@@ -329,17 +346,11 @@ class _StatsLineChart extends StatelessWidget {
           drawHorizontalLine: true,
           horizontalInterval: 1,
           getDrawingHorizontalLine: (_) => FlLine(
-            color: Theme.of(context)
-                .colorScheme
-                .outline
-                .withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             strokeWidth: 1,
           ),
           getDrawingVerticalLine: (_) => FlLine(
-            color: Theme.of(context)
-                .colorScheme
-                .outline
-                .withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             strokeWidth: 1,
           ),
         ),
@@ -361,10 +372,12 @@ class _StatsLineChart extends StatelessWidget {
               },
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -390,7 +403,9 @@ class _StatsLineChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontSize: 10),
                   ),
                 );
               },
@@ -416,10 +431,10 @@ class _StatsLineChart extends StatelessWidget {
               show: aggregated.length <= 14,
               getDotPainter: (spot, percent, barData, index) =>
                   FlDotCirclePainter(
-                radius: 3,
-                color: _metricColors[i],
-                strokeWidth: 0,
-              ),
+                    radius: 3,
+                    color: _metricColors[i],
+                    strokeWidth: 0,
+                  ),
             ),
             belowBarData: BarAreaData(show: false),
           );
